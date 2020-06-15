@@ -1,0 +1,5 @@
+# Config Files
+*.ini
+
+# PyCharm Related Files
+.idea/
