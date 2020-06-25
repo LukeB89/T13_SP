@@ -2,6 +2,7 @@ import psycopg2
 from configparser import ConfigParser
 import pandas as pd
 import os
+import numpy as np
 
 # Read DataBase info from the config file
 # Store in variables for use when making SQL Query's
@@ -14,7 +15,6 @@ passwd = options["passwd"]
 user = options["user"]
 port = options["port"]
 database = options["database"]
-
 
 
 def get_tripids(route):
@@ -72,7 +72,6 @@ def main():
         for num, chunk in enumerate(pd.read_csv("~/data/rt_leavetimes_DB_2018.csv", sep=";", chunksize=100000)):
             # Cycles through all routes for each chunk
             for route in route_df['Routes']:
-                print("Chunk num: {}, Route: {}".format(num, route))
                 # if all rows removed from chunk - break loop and move on to next chunk
                 if chunk.empty:
                     print("nothing left in chunk")
@@ -83,8 +82,10 @@ def main():
                 # Obtains a dataframe of all the rows that contain the ids from the list- True is present in that row,
                 # False if not present
                 ids_present = chunk['TRIPID'].isin(current_ids)
+                print(ids_present.value_counts())
                 # Inverts the selection for removal
-                remove_ids = ids_present.replace({True: False})
+                remove_ids = np.where(ids_present, False, True)
+                print(remove_ids.value_counts())
                 # Creates or recreates the route csv file with headers if working with the first chunk
                 if num == 0:
                     # Creates the csv file adding rows that contain the correct ids
