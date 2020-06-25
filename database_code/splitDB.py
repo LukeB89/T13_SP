@@ -69,7 +69,7 @@ def main():
         else:
             route_df = pd.read_csv("routes_tripids.csv")
         # Load master leavetimes file into chunks
-        for num, chunk in enumerate(pd.read_csv("rt_leavetimes_DB_2018.csv", sep=";", chunksize=100000)):
+        for num, chunk in enumerate(pd.read_csv("~/data/rt_leavetimes_DB_2018.csv", sep=";", chunksize=100000)):
             # Cycles through all routes for each chunk
             for route in route_df['Routes']:
                 # if all rows removed from chunk - break loop and move on to next chunk
