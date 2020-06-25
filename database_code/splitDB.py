@@ -72,6 +72,8 @@ def main():
         for num, chunk in enumerate(pd.read_csv("~/data/rt_leavetimes_DB_2018.csv", sep=";", chunksize=100000)):
             # Cycles through all routes for each chunk
             for route in route_df['Routes']:
+                print("Chunk Num: {}, Route: {}".format(num,route))
+                print(chunk)
                 # if all rows removed from chunk - break loop and move on to next chunk
                 if chunk.empty:
                     print("nothing left in chunk")
@@ -82,10 +84,8 @@ def main():
                 # Obtains a dataframe of all the rows that contain the ids from the list- True is present in that row,
                 # False if not present
                 ids_present = chunk['TRIPID'].isin(current_ids)
-                print(ids_present.value_counts())
                 # Inverts the selection for removal
-                remove_ids = np.where(ids_present, False, True)
-                print(remove_ids.value_counts())
+                remove_ids = pd.Series(data=np.where(ids_present, False, True),name='TRIPID')
                 # Creates or recreates the route csv file with headers if working with the first chunk
                 if num == 0:
                     # Creates the csv file adding rows that contain the correct ids
@@ -99,6 +99,7 @@ def main():
                                                   index=False)
                     # Removes the rows from the chunk that have already been added to file
                     chunk = chunk[chunk['TRIPID'] == remove_ids]
+                print(chunk)
             if not chunk.empty:
                 print("remaning tripids have no specified route")
                 if not os.path.isfile("remaining_ids.csv"):
