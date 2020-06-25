@@ -1,6 +1,15 @@
 import os
 import pandas as pd
+from configparser import ConfigParser
 
+config = ConfigParser()
+config.read("../config.ini")
+options = config["DataBase"]
+host = options["host"]
+passwd = options["passwd"]
+user = options["user"]
+port = options["port"]
+database = options["database"]
 
 def verify_ids():
     """A multi-purpose funtion for checking the tripid information is sound
@@ -35,8 +44,10 @@ def verify_ids():
             # runs through each ID
             for tripid in current_ids:
                 # Gets all distinct lineids that use the current trip id
-                cur.execute("SELECT DISTINCT lineid FROM trips WHERE tripid = '{}';".format(tripid))
-                rout = cur.fetchall()
+                with psycopg2.connect(dbname=database, host=host, port=port, user=user, password=passwd) as connection:
+                    with connection.cursor() as cur:
+                        cur.execute("SELECT DISTINCT lineid FROM trips WHERE tripid = '{}';".format(tripid))
+                        rout = cur.fetchall()
                 for r in rout:
                     if r[0] not in routex:
                         # Appends non-present rout numbers to the list
