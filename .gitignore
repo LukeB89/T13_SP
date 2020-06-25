@@ -3,3 +3,7 @@
 
 # PyCharm Related Files
 .idea/
+
+# files with extentions to ignore
+*.txt
+*.csv
