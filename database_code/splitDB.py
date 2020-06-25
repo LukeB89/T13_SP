@@ -72,6 +72,7 @@ def main():
         for num, chunk in enumerate(pd.read_csv("~/data/rt_leavetimes_DB_2018.csv", sep=";", chunksize=100000)):
             # Cycles through all routes for each chunk
             for route in route_df['Routes']:
+                print("Chunk num: {}, Route: {}".format(num, route))
                 # if all rows removed from chunk - break loop and move on to next chunk
                 if chunk.empty:
                     print("nothing left in chunk")
