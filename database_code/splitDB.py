@@ -3,6 +3,7 @@ from configparser import ConfigParser
 import pandas as pd
 import os
 import numpy as np
+import traceback
 
 # Read DataBase info from the config file
 # Store in variables for use when making SQL Query's
@@ -112,6 +113,7 @@ def main():
         print("Error while connecting to PSQL: ", error)
     except Exception as errorE:
         print("Generic Error: ", errorE)
+        traceback.print_exc()
 
 
 if __name__ == '__main__':
