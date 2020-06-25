@@ -19,9 +19,9 @@ database = options["database"]
 
 
 def get_tripids(route):
-    '''Function to get the Trip IDs for any given route
+    """Function to get the Trip IDs for any given route
 
-    Input is the route number output is a list of all of the unique IDs associated with that route'''
+    Input is the route number output is a list of all of the unique IDs associated with that route"""
 
     # setup variable
     tripids = []
