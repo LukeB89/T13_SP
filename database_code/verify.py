@@ -69,7 +69,39 @@ def verify_ids():
             # Writes to log file
             f.write(string + "\n\n")
 
+def investigate_further(ids):
+    route_df = pd.read_csv("routes_tripids.csv")
+    for id in ids:
+        oj_list = list(
+            map(int, route_df.loc[route_df['Routes'] == id, 'TripIds'].iloc[0].strip('[]').split(', ')))
+        check_df = pd.read_csv("route_{}_leavetimes.csv".format(id))
+        # Creates a list of unique tripids from dataframe
+        new_list = list(check_df.TRIPID.unique())
+        print("Length of DB list of TripIds for route {}: {}".format(id, len(oj_list)))
+        print("Length of segregated list of TripIds for route {}: {}".format(id, len(new_list)))
+        if len(oj_list) > len(new_list):
+            for i in range(len(oj_list)):
+                if oj_list[i] not in new_list:
+                    print("{} is in the DB list of IDs but not in the Segregated List".format(oj_list[i]))
+        else:
+            for i in range(len(new_list)):
+                if new_list[i] not in oj_list:
+                    print("{} is in the Segregated list of IDs but not in the DB List".format(new_list[i]))
+
 
 
 if __name__ == '__main__':
-    verify_ids()
+    print("Options:")
+    print("1) Verify")
+    print("2) Investigate")
+    option = input("Choose Option Number: ")
+    if option == 1:
+        verify_ids()
+    elif option == 2:
+        num_id = input("How many ids to investigate? ")
+        ids = []
+        for i in range(num_id):
+            ids.append(input("Enter ID {}: ".format(i+1)))
+        investigate_further(ids)
+    else:
+        print("Not an option please run again")
