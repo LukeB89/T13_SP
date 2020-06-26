@@ -98,7 +98,7 @@ if __name__ == '__main__':
     if option == 1:
         verify_ids()
     elif option == 2:
-        num_id = input("How many ids to investigate? ")
+        num_id = int(input("How many ids to investigate? "))
         ids = []
         for i in range(num_id):
             ids.append(input("Enter ID {}: ".format(i+1)))
