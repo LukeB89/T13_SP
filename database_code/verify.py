@@ -94,7 +94,7 @@ if __name__ == '__main__':
     print("Options:")
     print("1) Verify")
     print("2) Investigate")
-    option = input("Choose Option Number: ")
+    option = int(input("Choose Option Number: "))
     if option == 1:
         verify_ids()
     elif option == 2:
