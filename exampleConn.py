@@ -14,7 +14,7 @@ database = options["database"]
 try:
     connection = psycopg2.connect(dbname=database, host=host, port=port, user=user, password=passwd)
     cursor = connection.cursor()
-    print(connection.get_dsn_parameters(), "\n")
+
     cursor.execute("SELECT version();")
     record = cursor.fetchone()
     print("You are connected to - ", record, "\n")
