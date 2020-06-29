@@ -16,8 +16,8 @@ import DateTimeSelector from './components/DateTimeSelector';
 import * as data from "./data/db-stops.json";
 
 const Wrapper = styled.main`
-  width: 100vh;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
 `;
 
 const options = {
@@ -121,7 +121,7 @@ export default function App() {
               center={center}
               zoom={zoom}
               mapContainerStyle={{
-                height: "100%"
+                height: "99vh"
               }}
             >
               <MarkerClusterer options={options}>

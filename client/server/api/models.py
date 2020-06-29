@@ -4,7 +4,7 @@ from configparser import ConfigParser
 
 # read DataBase info from the config file
 config = ConfigParser()
-config.read("../config.ini")
+config.read("../../config.ini")
 options = config["DataBase"]
 database = options["database"]
 host = options["host"]
