@@ -1,2 +1,2 @@
-const googleMapApiKey=""
-export default googleMapApiKey
+const googleMapApiKey = "";
+export default googleMapApiKey;
