@@ -1,20 +1,6 @@
 import os
 import pandas as pd
-import psycopg2
-from configparser import ConfigParser
 import sys
-
-pd.set_option('max_columns', None)
-pd.set_option('max_rows', 100)
-
-config = ConfigParser()
-config.read("../config.ini")
-options = config["DataBase"]
-host = options["host"]
-passwd = options["passwd"]
-user = options["user"]
-port = options["port"]
-database = options["database"]
 
 drop_columns = ["DATASOURCE", "PASSENGERS", "PASSENGERSIN", "PASSENGERSOUT", "DISTANCE", "JUSTIFICATIONID",
                 "LASTUPDATE", "NOTE"]
@@ -25,20 +11,18 @@ weather_columns = ["dt_iso", "temp", "feels_like", "temp_min", "temp_max", "pres
 
 
 def get_routes():
-    #route_df = pd.read_csv("routes_tripids.csv")
-    route_df = pd.DataFrame()
-    route_df["Routes"] = ["46A"]
+    route_df = pd.read_csv("../database_code/routes_tripids.csv")
     return route_df["Routes"]
 
 
 def clean_leavetimes(route):
     complete = False
     # Check to see if file exists
-    if not os.path.isfile("route_{}_leavetimes.csv".format(route)):
+    if not os.path.isfile("../database_code/route_{}_leavetimes.csv".format(route)):
         return complete
     else:
         # imports file to DataFrame
-        leave_df = pd.read_csv("route_{}_leavetimes.csv".format(route))
+        leave_df = pd.read_csv("../database_code/route_{}_leavetimes.csv".format(route))
         # Drops Columns Not Needed
         leave_df = leave_df.drop(columns=drop_columns)
         # Drops Rows Where Suppressed = 1
@@ -58,19 +42,19 @@ def clean_leavetimes(route):
         leave_df = leave_df.drop_duplicates(keep=False)
         # Remove Rows Wit Null Values
         leave_df = leave_df.dropna()
-        leave_df.to_csv("route_{}_leavetimes.csv".format(route), index=False)
+        leave_df.to_csv("../database_code/route_{}_leavetimes.csv".format(route), index=False)
         complete = True
     return complete
 
 
 def add_trips(route):
     complete = False
-    if not os.path.isfile("route_{}_leavetimes.csv".format(route)):
+    if not os.path.isfile("../database_code/route_{}_leavetimes.csv".format(route)):
         return complete
     else:
         # Read In Tables to Dataframes
-        trips_df = pd.read_csv("trips.csv")
-        leave_df = pd.read_csv("route_{}_leavetimes.csv".format(route))
+        trips_df = pd.read_csv("../database_code/trips.csv")
+        leave_df = pd.read_csv("../database_code/route_{}_leavetimes.csv".format(route))
         # Keep Needed Columns And Standardise The Headings
         trips_df = trips_df[trip_columns]
         trips_df.columns = map(str.upper,trips_df.columns)
@@ -118,19 +102,19 @@ def add_trips(route):
                 leave_df.loc[(leave_df["TRIPID"] == id)&(leave_df["DAYOFSERVICE"] == date), "ACTUAL_TRIP_DURATION"] = \
                     new_actual
         # Save Data And Confirm Completed
-        leave_df.to_csv("route_{}_leavetimes.csv".format(route), index=False)
+        leave_df.to_csv("../database_code/route_{}_leavetimes.csv".format(route), index=False)
         complete = True
     return complete
 
 
 def add_weather(route):
     complete = False
-    if not os.path.isfile("route_{}_leavetimes.csv".format(route)):
+    if not os.path.isfile("../database_code/route_{}_leavetimes.csv".format(route)):
         return complete
     else:
         # Read In Tables to Dataframes
-        weather_df = pd.read_csv("weather.csv")
-        leave_df = pd.read_csv("route_{}_leavetimes.csv".format(route))
+        weather_df = pd.read_csv("../database_code/weather.csv")
+        leave_df = pd.read_csv("../database_code/route_{}_leavetimes.csv".format(route))
         # Keep Needed Columns And Standardise The Headings
         weather_df = weather_df[weather_columns]
         weather_df.columns = map(str.upper, weather_df.columns)
@@ -157,18 +141,18 @@ def add_weather(route):
         # Remove DateTime As Data Now In Individual Columns For Easier Modeling
         leave_df = leave_df.drop(columns=["DAYOFSERVICE", "DT_ISO"])
         # Save Data And Confirm Completed
-        leave_df.to_csv("route_{}_leavetimes.csv".format(route), index=False)
+        leave_df.to_csv("../database_code/route_{}_leavetimes.csv".format(route), index=False)
         complete = True
     return complete
 
 
 def checks(route):
     complete = False
-    if not os.path.isfile("route_{}_leavetimes.csv".format(route)):
+    if not os.path.isfile("../database_code/route_{}_leavetimes.csv".format(route)):
         return complete
     else:
         # Read In Table To DataFrame
-        leave_df = pd.read_csv("route_{}_leavetimes.csv".format(route))
+        leave_df = pd.read_csv("../database_code/route_{}_leavetimes.csv".format(route))
         # Check If Any Remaining NaN Values And Remove
         if leave_df.isnull().any().any():
             leave_df = leave_df.dropna()
@@ -180,7 +164,7 @@ def checks(route):
             with open("clean_log.txt", 'a') as f:
                 f.write("Route {} had Duplicated Rows. Removed\n".format(route))
         # Save Data And Confirm Completed
-        leave_df.to_csv("route_{}_leavetimes.csv".format(route), index=False)
+        leave_df.to_csv("../database_code/route_{}_leavetimes.csv".format(route), index=False)
         complete = True
 
     return complete
