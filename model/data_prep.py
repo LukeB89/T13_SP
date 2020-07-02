@@ -43,6 +43,8 @@ def clean_leavetimes(route):
         # Remove Rows Wit Null Values
         leave_df = leave_df.dropna()
         leave_df.to_csv("../database_code/route_{}_leavetimes.csv".format(route), index=False)
+        # Remove Unused Variables From Memory
+        del leave_df
         complete = True
     return complete
 
@@ -103,6 +105,8 @@ def add_trips(route):
                     new_actual
         # Save Data And Confirm Completed
         leave_df.to_csv("../database_code/route_{}_leavetimes.csv".format(route), index=False)
+        # Remove Unused Variables From Memory
+        del leave_df, trips_df, seg_df, local_seg_df, dates, max_progr, min_progr, new_actual, nan_ids
         complete = True
     return complete
 
@@ -142,6 +146,8 @@ def add_weather(route):
         leave_df = leave_df.drop(columns=["DAYOFSERVICE", "DT_ISO"])
         # Save Data And Confirm Completed
         leave_df.to_csv("../database_code/route_{}_leavetimes.csv".format(route), index=False)
+        # Remove Unused Variables From Memory
+        del leave_df, weather_df
         complete = True
     return complete
 
@@ -165,6 +171,8 @@ def checks(route):
                 f.write("Route {} had Duplicated Rows. Removed\n".format(route))
         # Save Data And Confirm Completed
         leave_df.to_csv("../database_code/route_{}_leavetimes.csv".format(route), index=False)
+        # Remove Unused Variables From Memory
+        del leave_df
         complete = True
 
     return complete
