@@ -1,11 +1,12 @@
 // Importing outside developed components.
-import React, { useState } from "react";
+import React, { useState, Component } from "react";
 import {
   useLoadScript,
   GoogleMap,
   Marker,
   InfoWindow,
   MarkerClusterer,
+  DirectionsRenderer,
 } from "@react-google-maps/api";
 import Container from "react-bootstrap/Container";
 import Button from "react-bootstrap/Button";
@@ -16,6 +17,7 @@ import styled from "styled-components";
 import Api from "./components/Api";
 import DateTimeSelector from "./components/DateTimeSelector";
 import BrandBar from "./components/BrandBar";
+import Directions from "./components/Directions";
 // Importing outside developed css.
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@reach/combobox/styles.css";
@@ -29,12 +31,21 @@ const Wrapper = styled.main`
   height: 100%;
 `;
 // Importing custom styles to customize the style of Google Map.
+// Important for including and excluding markers etc.
 const styles = require("./data/GoogleMapStyles.json");
-// Defined custom styles to customize the style of Google Map.
+// Defined custom styles and location for Google Map.
 const mapOptions = {
   styles: styles,
   disableDefaultUI: true,
   zoomControl: true,
+};
+const mapContainerStyle = {
+  height: "94vh",
+};
+// consts: [53.349804, -6.260310] - Dublin
+const dublinCenter = {
+  lat: 53.349804,
+  lng: -6.30131,
 };
 // Icon used to represent a bus stop on the map.
 const icon = {
@@ -79,13 +90,15 @@ export default function App() {
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: googleMapApiKey,
   });
-  // consts: [53.349804, -6.260310] - Dublin
-  const [center, setCenter] = useState({ lat: 53.349804, lng: -6.26031 });
+  const [center, setCenter] = useState(dublinCenter);
   const [zoom, setZoom] = useState(11);
   // The things we need to track in state
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [markerMap, setMarkerMap] = useState({});
   const [infoOpen, setInfoOpen] = useState(false);
+
+  const [markers, setMarkers] = React.useState([]);
+  const [selected, setSelected] = React.useState(null);
 
   const mapRef = React.useRef();
   const onMapLoad = React.useCallback((map) => {
@@ -95,6 +108,8 @@ export default function App() {
   const panTo = React.useCallback(({ lat, lng }) => {
     mapRef.current.panTo({ lat, lng });
     mapRef.current.setZoom(16);
+    //
+    setMarkers((current) => [...current, { lat: lat, lng: lng }]);
   }, []);
 
   // We have to create a mapping of our places to actual Marker objects
@@ -124,14 +139,12 @@ export default function App() {
         <Wrapper style={{ width: "75%", float: "left" }}>
           {/* Render the Google Map */}
           <GoogleMap
-            onLoad={onMapLoad}
+            mapContainerStyle={mapContainerStyle}
             center={center}
             zoom={zoom}
             maxZoom={13}
             options={mapOptions}
-            mapContainerStyle={{
-              height: "94vh",
-            }}
+            onLoad={onMapLoad}
           >
             <Locate panTo={panTo} />
 
@@ -165,6 +178,17 @@ export default function App() {
                 </div>
               </InfoWindow>
             )}
+            {markers.map((marker) => (
+              <Marker
+                key={`${marker.lat}-${marker.lng}`}
+                position={{ lat: marker.lat, lng: marker.lng }}
+                onClick={() => {
+                  setSelected(marker);
+                }}
+              />
+            ))}
+            {/* Hard coded sample route planner */}
+            {/* <Directions></Directions> */}
           </GoogleMap>
         </Wrapper>
 
@@ -195,20 +219,20 @@ export default function App() {
   );
 }
 
-// Function to adjust the map to user's location.
+// Function to adjust the map to user location.
 function Locate({ panTo }) {
   return (
     <button
       className="locate"
       onClick={() => {
         navigator.geolocation.getCurrentPosition(
+          // Hard coding Dublin for the time being.
           (position) => {
             panTo({
               // lat: position.coords.latitude,
               // lng: position.coords.longitude,
-              // Hard coding Dublin for the time being.
-              lat: 53.343,
-              lng: -6.2562,
+              lat: dublinCenter.lat,
+              lng: dublinCenter.lng,
             });
           },
           () => null
@@ -220,7 +244,7 @@ function Locate({ panTo }) {
   );
 }
 
-// Function to adjust the map to user's chosen stop(s).
+// Function to adjust the map to user selected stop(s).
 function Search({ panTo }) {
   return (
     <div>
@@ -243,7 +267,6 @@ function Search({ panTo }) {
           }
         }}
       />
-      <Marker position={{ lat: 53.3522411111, lng: -6.263695 }} />
     </div>
   );
 }
