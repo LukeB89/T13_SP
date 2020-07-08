@@ -1,37 +1,39 @@
 // Importing outside developed components.
-import React, { useState, Component } from "react";
+import React, { useState } from "react";
 import {
   useLoadScript,
   GoogleMap,
   Marker,
   InfoWindow,
   MarkerClusterer,
-  DirectionsRenderer,
 } from "@react-google-maps/api";
 import Container from "react-bootstrap/Container";
-import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import { Typeahead } from "react-bootstrap-typeahead";
 import styled from "styled-components";
+import useSwr from "swr";
 // Importing self-developed components.
 import Api from "./components/Api";
 import DateTimeSelector from "./components/DateTimeSelector";
 import BrandBar from "./components/BrandBar";
 import Directions from "./components/Directions";
+// import Table from "./components/Table";
 // Importing outside developed css.
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@reach/combobox/styles.css";
 // Importing the Dublin Bus API stops data
-import * as data from "./data/db-stops.json";
+import * as data from "./data/DublinBusStops.json";
 // Importing Google Maps Api Key.
 import googleMapApiKey from "./config";
+// Defining libraries for Google Places
+const libraries = ["places"];
 // Defined styling for separation of page displayed.
 const Wrapper = styled.main`
   width: 100%;
   height: 100%;
 `;
 // Importing custom styles to customize the style of Google Map.
-// Important for including and excluding markers etc.
+// Important for including and excluding certain place markers etc.
 const styles = require("./data/GoogleMapStyles.json");
 // Defined custom styles and location for Google Map.
 const mapOptions = {
@@ -76,6 +78,7 @@ const myStops = rawData.map((stop) => ({
   },
 }));
 const parsedStops = myStops.map((parsed) => ({
+  id: parsed.properties.id,
   description: parsed.description,
   geometry: parsed.geometry.pos,
 }));
@@ -89,16 +92,17 @@ for (var i = 0; i < parsedStops.length; i++) {
 export default function App() {
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: googleMapApiKey,
+    libraries,
   });
   const [center, setCenter] = useState(dublinCenter);
   const [zoom, setZoom] = useState(11);
-  // The things we need to track in state
+  // The things we need to track in state:
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [markerMap, setMarkerMap] = useState({});
   const [infoOpen, setInfoOpen] = useState(false);
-
   const [markers, setMarkers] = React.useState([]);
   const [selected, setSelected] = React.useState(null);
+  const [stopNumber, setStopNumber] = React.useState(0);
 
   const mapRef = React.useRef();
   const onMapLoad = React.useCallback((map) => {
@@ -108,9 +112,12 @@ export default function App() {
   const panTo = React.useCallback(({ lat, lng }) => {
     mapRef.current.panTo({ lat, lng });
     mapRef.current.setZoom(16);
-    //
     setMarkers((current) => [...current, { lat: lat, lng: lng }]);
   }, []);
+  // Changing stop realtime info based on user choice.
+  const stopChoice = React.useCallback((number) => {
+    setStopNumber(() => parseInt(number.id));
+  });
 
   // We have to create a mapping of our places to actual Marker objects
   const markerLoadHandler = (marker, stop) => {
@@ -151,7 +158,7 @@ export default function App() {
             <MarkerClusterer
               options={options}
               maxZoom={16}
-              minimumClusterSize={6}
+              minimumClusterSize={4}
             >
               {(clusterer) =>
                 myStops.map((stop) => (
@@ -178,6 +185,7 @@ export default function App() {
                 </div>
               </InfoWindow>
             )}
+            {/* Markers dropped on selection box choice. */}
             {markers.map((marker) => (
               <Marker
                 key={`${marker.lat}-${marker.lng}`}
@@ -187,31 +195,23 @@ export default function App() {
                 }}
               />
             ))}
-            {/* Hard coded sample route planner */}
-            {/* <Directions></Directions> */}
+            <Directions></Directions>
           </GoogleMap>
         </Wrapper>
 
         <Wrapper style={{ width: "25%", float: "right" }}>
-          <Container style={{ paddingTop: "15vh" }}>
+          <Container style={{ paddingTop: "5vh" }}>
             <DateTimeSelector></DateTimeSelector>
             <Form>
               <Form.Group controlId="formDeparture">
-                <Form.Label>Departure</Form.Label>
-                <Search panTo={panTo} />
+                <Form.Label>Stop Information</Form.Label>
+                <Search panTo={panTo} stopChoice={stopChoice} />
               </Form.Group>
             </Form>
-            <Form>
-              <Form.Group controlId="formArrival">
-                <Form.Label>Arrival</Form.Label>
-                <Search panTo={panTo} />
-              </Form.Group>
-            </Form>
-            {/* need to add an onclick event that relates to the database here. */}
-            <Button variant="primary" type="submit" onClick>
-              Submit
-            </Button>
-            <Api></Api>
+
+            <StopInfo number={stopNumber} />
+
+            <div id="panel"></div>
           </Container>
         </Wrapper>
       </Container>
@@ -219,7 +219,8 @@ export default function App() {
   );
 }
 
-// Function to adjust the map to user location.
+// Generate an icon which when clicked
+// will adjust the map to the users location.
 function Locate({ panTo }) {
   return (
     <button
@@ -244,8 +245,10 @@ function Locate({ panTo }) {
   );
 }
 
-// Function to adjust the map to user selected stop(s).
-function Search({ panTo }) {
+// Generate a searchbox that includes all of the
+// stops. Chosen stop will adjust the map to that
+// stops location and display its realtime info.
+function Search({ panTo, stopChoice }) {
   return (
     <div>
       <Typeahead
@@ -257,9 +260,11 @@ function Search({ panTo }) {
           try {
             for (var i = 0; i < parsedStops.length; i++) {
               if (address == parsedStops[i].description) {
-                const lat = parsedStops[i].geometry.lat,
-                  lng = parsedStops[i].geometry.lng;
+                const lat = parsedStops[i].geometry.lat;
+                const lng = parsedStops[i].geometry.lng;
+                const id = parsedStops[i].id;
                 panTo({ lat, lng });
+                stopChoice({ id });
               }
             }
           } catch (error) {
@@ -267,6 +272,60 @@ function Search({ panTo }) {
           }
         }}
       />
+    </div>
+  );
+}
+
+// Calls the realtime api and returns a table.
+function StopInfo(props) {
+  const fetcher = (...args) =>
+    fetch(...args).then((response) => response.json());
+  const url =
+    "https://data.smartdublin.ie/cgi-bin/rtpi/realtimebusinformation?stopid=" +
+    props.number +
+    "&operator=bac";
+  const { data, error } = useSwr(url, { fetcher });
+  const rawStopData =
+    data && !error
+      ? data
+      : // creating a placeholder object while awaiting api response
+        {
+          results: [
+            {
+              arrivaldatetime: "08/07/2020 00:00:00",
+              route: "",
+              destination: "",
+              duetime: "",
+            },
+          ],
+        };
+  const stopData = rawStopData.results;
+  const realInfo = stopData.map((info) => ({
+    id: info.arrivaldatetime,
+    route: info.route,
+    destination: info.destination,
+    arrivaltime: info.duetime,
+  }));
+
+  return (
+    <div>
+      <table singleLine>
+        <tr>
+          <th>Route</th>
+          <th>Destination</th>
+          <th>Arrival</th>
+        </tr>
+
+        {realInfo.map((info) => {
+          return (
+            <tr key={info.id}>
+              <td>{info.route}</td>
+              <td>{info.destination}</td>
+              <td>{info.arrivaltime} mins</td>
+            </tr>
+          );
+        })}
+      </table>
     </div>
   );
 }
