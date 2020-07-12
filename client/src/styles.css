@@ -29,6 +29,16 @@
   z-index: 10;
 }
 
+.searchLocations {
+  width: 100%;
+  z-index: 10;
+}
+
+.searchLocations input {
+  font-size: 1.1rem;
+  width: 100%;
+}
+
 .boxes {
   position: absolute;
   top: 1rem;
