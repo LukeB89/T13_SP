@@ -77,10 +77,14 @@ def main():
                     track_df.loc[track_df["Route"] == route, ["Model"]] = 1
                     # Update log
                     with open('model_log.txt', 'a') as f:
-                        f.write("Route {} Model Built\n")
+                        f.write("Route {} Model Built\n".format(route))
                 except:
                     # If Error move on to next route
                     continue
+            else:
+                with open('model_log.txt', 'a') as f:
+                    f.write("Route {} Model Already Built\n".format(route))
+
 
     finally:
         track_df.to_csv("model_tracker.csv", index=False)
