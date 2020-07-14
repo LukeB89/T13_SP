@@ -6,6 +6,8 @@ import os
 import pickle
 # Import individual sklearn modules used in model building and analysis
 from sklearn.ensemble import RandomForestRegressor
+# Used in error handling
+import sys
 
 def get_routes():
     # Get a list of all routes and return to user
@@ -78,17 +80,18 @@ def main():
                     # Update log
                     with open('model_log.txt', 'a') as f:
                         f.write("Route {} Model Built\n".format(route))
+                    track_df.to_csv("model_tracker.csv", index=False)
+                    fetr_df.to_csv("model_features.csv", index=False)
                 except:
                     # If Error move on to next route
                     continue
             else:
                 with open('model_log.txt', 'a') as f:
                     f.write("Route {} Model Already Built\n".format(route))
+    except Exception as e:
+        with open('model_log.txt', 'a') as f:
+            f.write("Error: ".format(e.with_traceback(sys.exc_info())))
 
-
-    finally:
-        track_df.to_csv("model_tracker.csv", index=False)
-        fetr_df.to_csv("model_features.csv", index=False)
 
 if __name__ == '__main__':
     main()
