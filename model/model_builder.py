@@ -24,13 +24,13 @@ def clean_and_split(route):
         # imports file to DataFrame
         leave_df = pd.read_csv("../database_code/route_{}_leavetimes.csv".format(route))
     # Get Dummies for whole table on specfic coulmns
-    train_data = pd.get_dummies(leave_df, columns=["STOPPOINTID", "DIRECTION", "MONTH", "HOUR", "WEATHER_MAIN", "DAYOFWEEK", "WEATHER_ID"], drop_first=True)
+    train_data = pd.get_dummies(leave_df, columns=["STOPPOINTID", "DIRECTION", "MONTH", "HOUR", "WEATHER_MAIN", "DAYOFWEEK", "WEATHER_ID", "DAY"], drop_first=True)
     # Reset index
     train_data.reset_index(drop=True, inplace=True)
     # Save target data
     train_trgt = train_data["ACTUALTIME_ARR"]
     # Save feature data
-    train_fetr = train_data.drop(columns=["ACTUALTIME_ARR", "TRIPID","PROGRNUMBER", "PLANNEDTIME_ARR", "VEHICLEID", "PLANNEDTIME_DEP", "ACTUALTIME_DEP", "DELAY", "TIMEATSTOP", "LINEID", "PLANNED_TRIP_DURATION", "ACTUAL_TRIP_DURATION", "YEAR", "DAY"])
+    train_fetr = train_data.drop(columns=["ACTUALTIME_ARR", "TRIPID","PROGRNUMBER", "PLANNEDTIME_ARR", "VEHICLEID", "PLANNEDTIME_DEP", "ACTUALTIME_DEP", "DELAY", "TIMEATSTOP", "LINEID", "PLANNED_TRIP_DURATION", "ACTUAL_TRIP_DURATION", "YEAR"])
     # Clean up memory space
     del leave_df, train_data
     # Return Variables
@@ -63,6 +63,8 @@ def main():
             # Check to see if current route has a model created
             if not track_df[(track_df["Route"] == route) & (track_df["Model"] == 0)].empty:
                 try:
+                    with open('model_log.txt', 'a') as f:
+                        f.write("Building Model For Route {}\n".format(route))
                     # Get feature and target data
                     # If route does not have file this will error and is caught below
                     train_fetr, train_trgt = clean_and_split(route)
