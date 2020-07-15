@@ -18,7 +18,7 @@ def clean_and_split(route):
     # Check if file is valid, log and return if not
     if not os.path.isfile("../database_code/route_{}_leavetimes.csv".format(route)):
         with open('model_log.txt', 'a') as f:
-            f.writelines("{} is not a valid route".format(route))
+            f.writelines("{} is not a valid route\n".format(route))
         return
     else:
         # imports file to DataFrame
@@ -84,7 +84,9 @@ def main():
                         f.write("Route {} Model Built\n".format(route))
                     track_df.to_csv("model_tracker.csv", index=False)
                     fetr_df.to_csv("model_features.csv", index=False)
-                except:
+                except Exception as e:
+                    with open('model_log.txt', 'a') as f:
+                        f.write("Error: {} \n".format(e))
                     # If Error move on to next route
                     continue
             else:
@@ -92,7 +94,7 @@ def main():
                     f.write("Route {} Model Already Built\n".format(route))
     except Exception as e:
         with open('model_log.txt', 'a') as f:
-            f.write("Error: ".format(e.with_traceback(sys.exc_info())))
+            f.write("Error: {}\n".format(e))
 
 
 if __name__ == '__main__':
