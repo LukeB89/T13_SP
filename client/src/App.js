@@ -13,6 +13,8 @@ import Container from "react-bootstrap/Container";
 import Form from "react-bootstrap/Form";
 import Table from "react-bootstrap/Table";
 import Button from "react-bootstrap/Button";
+import Nav from "react-bootstrap/Nav";
+import Navbar from "react-bootstrap/Navbar";
 import { Typeahead } from "react-bootstrap-typeahead";
 import styled from "styled-components";
 import useSwr from "swr";
@@ -27,7 +29,6 @@ import {
 // Importing self-developed components.
 import Api from "./components/Api";
 import DateTimeSelector from "./components/DateTimeSelector";
-import BrandBar from "./components/BrandBar";
 // Importing outside developed css.
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@reach/combobox/styles.css";
@@ -54,7 +55,7 @@ const mapOptions = {
   minZoom: 11,
 };
 const mapContainerStyle = {
-  height: "94vh",
+  height: "93vh",
 };
 // consts: [53.349804, -6.260310] - Dublin
 const dublinCenter = {
@@ -102,6 +103,20 @@ for (var i = 0; i < parsedStops.length; i++) {
   stopDescriptions.push(parsedStops[i].description);
 }
 
+const routesArray = [];
+const duplicateRoutes = [];
+for (var i = 0; i < myStops.length; i++) {
+  routesArray.push(myStops[i].properties.routes);
+}
+for (var i = 0; i < routesArray.length; i++) {
+  for (var j = 0; j < routesArray[i].length; j++) {
+    duplicateRoutes.push(routesArray[i][j]);
+  }
+}
+const allRoutes = duplicateRoutes.filter(
+  (a, b) => duplicateRoutes.indexOf(a) === b
+);
+
 // Main function to draw the Map/Page.
 export default function App() {
   const { isLoaded, loadError } = useLoadScript({
@@ -117,6 +132,7 @@ export default function App() {
   const [markers, setMarkers] = React.useState([]);
   const [selected, setSelected] = React.useState(null);
   const [stopNumber, setStopNumber] = React.useState(0);
+  const [routeString, setRouteString] = React.useState("");
   // The things for Directions we need to track in state.
   const [response, setResponse] = useState(null);
   const [origin, setOrigin] = useState("");
@@ -145,6 +161,10 @@ export default function App() {
   // Changing destination info based on user choice.
   const destinationChoice = (address) => {
     setDestination(() => address.results[0].formatted_address);
+  };
+  // Changing stops of route displayed on based on user choice.
+  const routeChoice = (route) => {
+    setRouteString(() => route.routeString);
   };
 
   const directionsCallback = (response) => {
@@ -181,22 +201,70 @@ export default function App() {
   return (
     <div>
       <Container fluid>
-        <BrandBar></BrandBar>
+        <Navbar
+          bg="dark"
+          variant="dark"
+          style={{ maxHeight: "7vh", paddingBottom: "1vh" }}
+        >
+          <Navbar.Brand href="#home">
+            <img
+              alt=""
+              src="https://media.glassdoor.com/sqll/1043913/dublin-bus-squarelogo-1440748899751.png"
+              width="30"
+              height="30"
+              className="d-inline-block align-top"
+            />{" "}
+            Dublin Bus
+          </Navbar.Brand>
+          <Nav className="mr-auto"></Nav>
+          <Form style={{ paddingRight: "1vw" }}>
+            <Form.Group
+              controlId="formRealTime"
+              style={{ paddingTop: "1.6vh", width: "15vw" }}
+            >
+              <SearchStop panTo={panTo} stopChoice={stopChoice} />
+            </Form.Group>
+          </Form>
+          <Form style={{ paddingRight: "1vw" }}>
+            <Form.Check
+              type="switch"
+              id="custom-switch"
+              label="Tourist Mode"
+              style={{ color: "white" }}
+            />
+          </Form>
+          <Form style={{ paddingRight: "1vw" }}>
+            <Form.Group
+              controlId="formRealTime"
+              style={{ paddingTop: "1.6vh", width: "6.5vw" }}
+            >
+              <FilterRoute routeChoice={routeChoice} />
+            </Form.Group>
+          </Form>
+        </Navbar>
+
         <Wrapper style={{ width: "75%", float: "left" }}>
           {/* Render the Google Map */}
           <GoogleMap
             mapContainerStyle={mapContainerStyle}
             center={center}
             zoom={zoom}
-            maxZoom={13}
             options={mapOptions}
             onLoad={onMapLoad}
           >
             <Locate panTo={panTo} />
 
-            <MarkerClusterer
+            {/* Uncomment this section for route selection */}
+            <RouteInfo
+              route={routeString}
+              markerLoadHandler={markerLoadHandler}
+              markerClickHandler={markerClickHandler}
+            ></RouteInfo>
+
+            {/* Uncomment this section for all markers at once */}
+            {/* <MarkerClusterer
               options={options}
-              maxZoom={16}
+              maxZoom={15}
               minimumClusterSize={4}
             >
               {(clusterer) =>
@@ -211,7 +279,7 @@ export default function App() {
                   />
                 ))
               }
-            </MarkerClusterer>
+            </MarkerClusterer> */}
 
             {infoOpen && selectedPlace && (
               <InfoWindow
@@ -221,10 +289,11 @@ export default function App() {
                 <div>
                   <h3>Stop Number: {selectedPlace.properties.id}</h3>
                   <h5>Routes: {selectedPlace.properties.routes.join(", ")}</h5>
+                  <StopInfo number={selectedPlace.properties.id} />
                 </div>
               </InfoWindow>
             )}
-            {/* Markers dropped on selection box choice. */}
+            {/* Markers dropped when stop has been chosen or geolocation activated. */}
             {markers.map((marker) => (
               <Marker
                 key={`${marker.lat}-${marker.lng}`}
@@ -253,6 +322,10 @@ export default function App() {
                   directions: response.response,
                 }}
                 panel={document.getElementById("panel")}
+                // removing all displayed stops upon loading
+                onLoad={() => {
+                  setRouteString("");
+                }}
               />
             )}
           </GoogleMap>
@@ -275,18 +348,9 @@ export default function App() {
               </Form.Group>
             </Form>
 
-            <Form>
-              <Form.Group controlId="formRealTime">
-                <Form.Label>Real Time Stop Information</Form.Label>
-                <Search panTo={panTo} stopChoice={stopChoice} />
-              </Form.Group>
-            </Form>
-
-            <StopInfo number={stopNumber} />
-
             <div
               id="panel"
-              style={{ maxHeight: "46vh", overflowY: "scroll" }}
+              style={{ maxHeight: "67vh", overflowY: "scroll" }}
             ></div>
           </Container>
         </Wrapper>
@@ -295,8 +359,8 @@ export default function App() {
   );
 }
 
-// Generate an icon which when clicked
-// and adjust the map to the users location.
+// Generate an icon when clicked and
+// adjust the map to the users location.
 function Locate({ panTo }) {
   return (
     <button
@@ -436,14 +500,14 @@ function SearchDestination({ destinationChoice }) {
 // Generate a searchbox that includes all of the
 // stops. Chosen stop will adjust the map to that
 // stops location and display its realtime info.
-function Search({ panTo, stopChoice }) {
+function SearchStop({ panTo, stopChoice, setMarkerMap }) {
   return (
     <div>
       <Typeahead
         id="basic-example"
         options={stopDescriptions}
         maxVisible={2}
-        placeholder="Choose a stop..."
+        placeholder="Choose a stop to locate on map..."
         onChange={(address) => {
           try {
             for (var i = 0; i < parsedStops.length; i++) {
@@ -453,6 +517,7 @@ function Search({ panTo, stopChoice }) {
                 const id = parsedStops[i].id;
                 panTo({ lat, lng });
                 stopChoice({ id });
+                setMarkerMap({});
               }
             }
           } catch (error) {
@@ -502,7 +567,7 @@ function StopInfo(props) {
           <tr>
             <th>Route</th>
             <th>Destination</th>
-            <th>Arrival</th>
+            <th>Arrival (mins)</th>
           </tr>
         </thead>
         <tbody>
@@ -511,7 +576,7 @@ function StopInfo(props) {
               <tr key={info.id}>
                 <td>{info.route}</td>
                 <td>{info.destination}</td>
-                <td>{info.arrivaltime} mins</td>
+                <td>{info.arrivaltime}</td>
               </tr>
             );
           })}
@@ -519,4 +584,59 @@ function StopInfo(props) {
       </Table>
     </div>
   );
+}
+
+// Return an autocomplete box containing each of the routes.
+function FilterRoute({ routeChoice }) {
+  return (
+    <div>
+      <Typeahead
+        id="basic-example"
+        options={allRoutes}
+        placeholder="Route filter..."
+        onChange={(route) => {
+          try {
+            for (var i = 0; i < allRoutes.length; i++) {
+              if (route == allRoutes[i]) {
+                const routeString = allRoutes[i];
+                routeChoice({ routeString });
+              }
+            }
+          } catch (error) {
+            console.log("error");
+          }
+        }}
+      />
+    </div>
+  );
+}
+
+// Function that filters the markers on the map
+// according to a user selected route.
+function RouteInfo(props, { markerLoadHandler, markerClickHandler }) {
+  const filteredMarkers = [];
+
+  for (var i = 0; i < myStops.length; i++) {
+    for (var j = 0; j < myStops[i].properties.routes.length; j++) {
+      if (myStops[i].properties.routes[j] == props.route) {
+        filteredMarkers.push(myStops[i]);
+        // } else if (props.route == "") {
+        //   filteredMarkers.push(myStops[i]);
+      }
+    }
+  }
+
+  const uniqueMarkers = filteredMarkers.filter(
+    (a, b) => filteredMarkers.indexOf(a) === b
+  );
+
+  return uniqueMarkers.map((stop) => (
+    <Marker
+      icon={icon}
+      key={stop.properties.id}
+      position={stop.geometry.pos}
+      onLoad={(marker) => props.markerLoadHandler(marker, stop)}
+      onClick={(event) => props.markerClickHandler(event, stop)}
+    />
+  ));
 }
