@@ -147,7 +147,6 @@ def main():
                             except Exception as e:
                                 with open('model_log.txt', 'a') as f:
                                     f.write("Error: {} \n".format(e))
-                                del randforest_model
                                 # If Error move on to next percent
                                 continue
 
