@@ -61,6 +61,8 @@ def clean_and_split_large(route, percent):
     train_data = main_df_dummies.loc[ids_present]
     # Reset Index
     train_data.reset_index(drop=True, inplace=True)
+    with open('model_log.txt', 'a') as f:
+        f.writelines("After Split {} has the shape: {}\n".format(route, train_data.shape))
     # Save target data
     train_trgt = train_data["ACTUALTIME_ARR"]
     # Save feature data
