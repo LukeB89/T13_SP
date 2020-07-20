@@ -49,26 +49,29 @@ def clean_and_split_large(route, percent):
         leave_df = pd.read_csv("../database_code/larger/route_{}_leavetimes.csv".format(route))
         with open('model_log.txt', 'a') as f:
             f.writelines("{} has the shape: {}\n".format(route, leave_df.shape))
-    # Get Dummies for whole table on specfic coulmns
-    main_df_dummies = pd.get_dummies(leave_df, columns=["STOPPOINTID", "DIRECTION", "MONTH", "HOUR", "WEATHER_MAIN", "DAYOFWEEK", "WEATHER_ID", "DAY"], drop_first=True)
-    # Reset index
+
     # Get list of all unique Trip IDs
-    full_list = list(main_df_dummies["TRIPID"].unique())
+    full_list = list(leave_df["TRIPID"].unique())
     # Split Trip Ids into 70:30 for Train:Test
     tripid_train, tripid_test = train_test_split(full_list, test_size=percent, random_state=0)
     # Seperate out the data
-    ids_present = main_df_dummies['TRIPID'].isin(tripid_train)
-    train_data = main_df_dummies.loc[ids_present]
+    ids_present = leave_df['TRIPID'].isin(tripid_train)
+    train_data = leave_df.loc[ids_present]
     # Reset Index
     train_data.reset_index(drop=True, inplace=True)
+    # Clean up memory space
+    del leave_df, full_list, tripid_test, tripid_train
     with open('model_log.txt', 'a') as f:
         f.writelines("After Split {} has the shape: {}\n".format(route, train_data.shape))
+    # Get Dummies for whole table on specfic coulmns
+    train_data = pd.get_dummies(train_data, columns=["STOPPOINTID", "DIRECTION", "MONTH", "HOUR", "WEATHER_MAIN", "DAYOFWEEK", "WEATHER_ID", "DAY"], drop_first=True)
+    # Reset index
+
     # Save target data
     train_trgt = train_data["ACTUALTIME_ARR"]
     # Save feature data
     train_fetr = train_data.drop(columns=["ACTUALTIME_ARR", "TRIPID","PROGRNUMBER", "PLANNEDTIME_ARR", "VEHICLEID", "PLANNEDTIME_DEP", "ACTUALTIME_DEP", "DELAY", "TIMEATSTOP", "LINEID", "PLANNED_TRIP_DURATION", "ACTUAL_TRIP_DURATION", "YEAR"])
-    # Clean up memory space
-    del leave_df, train_data, main_df_dummies, tripid_train, tripid_test
+
     # Return Variables
     return train_fetr, train_trgt
 
