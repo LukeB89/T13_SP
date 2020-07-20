@@ -47,6 +47,8 @@ def clean_and_split_large(route, percent):
     else:
         # imports file to DataFrame
         leave_df = pd.read_csv("../database_code/larger/route_{}_leavetimes.csv".format(route))
+        with open('model_log.txt', 'a') as f:
+            f.writelines("{} has the shape: \n".format(route, leave_df.shape))
     # Get Dummies for whole table on specfic coulmns
     main_df_dummies = pd.get_dummies(leave_df, columns=["STOPPOINTID", "DIRECTION", "MONTH", "HOUR", "WEATHER_MAIN", "DAYOFWEEK", "WEATHER_ID", "DAY"], drop_first=True)
     # Reset index
