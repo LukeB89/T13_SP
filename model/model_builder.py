@@ -61,6 +61,8 @@ def clean_and_split_large(route, percent):
     train_data.reset_index(drop=True, inplace=True)
     # Clean up memory space
     del leave_df, full_list, tripid_test, tripid_train
+    if train_data.shape[0] > 800000:
+        return
     with open('model_log.txt', 'a') as f:
         f.writelines("After Split {} has the shape: {}\n".format(route, train_data.shape))
     # Get Dummies for whole table on specfic coulmns
