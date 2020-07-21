@@ -3,6 +3,9 @@ import Table from "react-bootstrap/Table";
 
 const axios = require("axios");
 
+// Makes GET request to Django API with user selected stopid as parameter.
+// Django makes GET request to the RTPI API, which React returns as a Table.
+// Clicking a bus stop's marker will display this Table.
 const RtpiApi = (props) => {
   const placeholder = {
     results: [
@@ -47,18 +50,28 @@ const RtpiApi = (props) => {
           <tr>
             <th>Route</th>
             <th>Destination</th>
-            <th>Arrival (mins)</th>
+            <th>Due</th>
           </tr>
         </thead>
         <tbody>
           {realInfo.map((info) => {
-            return (
-              <tr key={info.id}>
-                <td>{info.route}</td>
-                <td>{info.destination}</td>
-                <td>{info.arrivaltime}</td>
-              </tr>
-            );
+            if (info.arrivaltime === "Due")
+              return (
+                <tr key={info.id}>
+                  <td>{info.route}</td>
+                  <td>{info.destination}</td>
+                  <td>{info.arrivaltime}</td>
+                </tr>
+              );
+            else {
+              return (
+                <tr key={info.id}>
+                  <td>{info.route}</td>
+                  <td>{info.destination}</td>
+                  <td>{info.arrivaltime} mins</td>
+                </tr>
+              );
+            }
           })}
         </tbody>
       </Table>

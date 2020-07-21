@@ -1,5 +1,6 @@
 import requests
 from .models import Tables
+from .models import Forecast_Weather
 from django.http import JsonResponse
 
 
@@ -20,3 +21,11 @@ def rtpi_api(request):
     results_dict = full_dict['results']
     real_time_array.append(results_dict)
     return JsonResponse({'results': results_dict})
+
+
+def weather_test(request):
+    one_line = Forecast_Weather.rows
+    array = []
+    for rows in one_line:
+        array.append(rows)
+    return JsonResponse({'weather_response': array})

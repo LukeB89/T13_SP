@@ -2,16 +2,19 @@ import React from "react";
 import Navbar from "react-bootstrap/Navbar";
 import Nav from "react-bootstrap/Nav";
 import Form from "react-bootstrap/Form";
+import Weather from "simple-react-weather";
 
+// This SPA's NavBar, containing branding logo, FilterRoute and
+// StopSearch Autocomplete selectors, and Tourist Mode toggle.
 function CustomNavbar({
+  FilterRoute,
   StopSearch,
+  setMarkerMap,
   panTo,
   stopChoice,
-  setMarkerMap,
-  stopDescriptions,
-  parsedStops,
-  FilterRoute,
   routeChoice,
+  parsedStops,
+  stopDescriptions,
   allRoutes,
 }) {
   return (
@@ -61,6 +64,12 @@ function CustomNavbar({
           style={{ color: "white" }}
         />
       </Form>
+      <Weather
+        unit="C"
+        city="Dublin, IE"
+        appid="0af2c4378e1bfb001a3e457cc32410be"
+        style={{ paddingTop: "1.8vh" }}
+      />
     </Navbar>
   );
 }

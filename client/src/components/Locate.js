@@ -2,7 +2,8 @@ import React from "react";
 
 const dublinCenter = require("../data/DublinCenter.json");
 
-// Generate an icon when clicked and
+// Generate an icon for display at the top right hand
+// corner of the map which when clicked will
 // adjust the map to the users location.
 function Locate({ panTo }) {
   return (

@@ -1,9 +1,8 @@
 import React from "react";
 import { Typeahead } from "react-bootstrap-typeahead";
 
-// Generate a searchbox that includes all of the
-// stops. Chosen stop will adjust the map to that
-// stops location and display its realtime info.
+// Generate a Typeahead search box that includes all of the stops.
+// Choosing a stop will adjust the map to that stops location and place a red marker.
 export default function StopSearch({
   panTo,
   stopChoice,
@@ -29,7 +28,7 @@ export default function StopSearch({
               }
             }
           } catch (error) {
-            console.log("error");
+            console.log("😱 Error: ", error);
           }
         }}
       />

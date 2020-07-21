@@ -1,0 +1,246 @@
+{
+  "0": {
+    "label": "tornado",
+    "icon": "wi wi-yahoo-0"
+  },
+
+  "1": {
+    "label": "tropical storm",
+    "icon": "wi wi-yahoo-1"
+  },
+
+  "2": {
+    "label": "hurricane",
+    "icon": "wi wi-yahoo-2"
+  },
+
+  "3": {
+    "label": "severe thunderstorms",
+    "icon": "wi wi-yahoo-3"
+  },
+
+  "4": {
+    "label": "thunderstorms",
+    "icon": "wi wi-yahoo-4"
+  },
+
+  "5": {
+    "label": "mixed rain and snow",
+    "icon": "wi wi-yahoo-5"
+  },
+
+  "6": {
+    "label": "mixed rain and sleet",
+    "icon": "wi wi-yahoo-6"
+  },
+
+  "7": {
+    "label": "mixed snow and sleet",
+    "icon": "wi wi-yahoo-7"
+  },
+
+  "8": {
+    "label": "freezing drizzle",
+    "icon": "wi wi-yahoo-8"
+  },
+
+  "9": {
+    "label": "drizzle",
+    "icon": "wi wi-yahoo-9"
+  },
+
+  "10": {
+    "label": "freezing rain",
+    "icon": "wi wi-yahoo-10"
+  },
+
+  "11": {
+    "label": "showers",
+    "icon": "wi wi-yahoo-11"
+  },
+
+  "12": {
+    "label": "showers",
+    "icon": "wi wi-yahoo-12"
+  },
+
+  "13": {
+    "label": "snow flurries",
+    "icon": "wi wi-yahoo-13"
+  },
+
+  "14": {
+    "label": "light snow showers",
+    "icon": "wi wi-yahoo-14"
+  },
+
+  "15": {
+    "label": "blowing snow",
+    "icon": "wi wi-yahoo-15"
+  },
+
+  "16": {
+    "label": "snow",
+    "icon": "wi wi-yahoo-16"
+  },
+
+  "17": {
+    "label": "hail",
+    "icon": "wi wi-yahoo-17"
+  },
+
+  "18": {
+    "label": "sleet",
+    "icon": "wi wi-yahoo-18"
+  },
+
+  "19": {
+    "label": "dust",
+    "icon": "wi wi-yahoo-19"
+  },
+
+  "20": {
+    "label": "foggy",
+    "icon": "wi wi-yahoo-20"
+  },
+
+  "21": {
+    "label": "haze",
+    "icon": "wi wi-yahoo-21"
+  },
+
+  "22": {
+    "label": "smoky",
+    "icon": "wi wi-yahoo-22"
+  },
+
+  "23": {
+    "label": "blustery",
+    "icon": "wi wi-yahoo-23"
+  },
+
+  "24": {
+    "label": "windy",
+    "icon": "wi wi-yahoo-24"
+  },
+
+  "25": {
+    "label": "coldy",
+    "icon": "wi wi-yahoo-25"
+  },
+
+  "26": {
+    "label": "cloudy",
+    "icon": "wi wi-yahoo-26"
+  },
+
+  "27": {
+    "label": "mostly cloudy (night)",
+    "icon": "wi wi-yahoo-27"
+  },
+
+  "28": {
+    "label": "mostly cloudy (day)",
+    "icon": "wi wi-yahoo-28"
+  },
+
+  "29": {
+    "label": "partly cloudy (night)",
+    "icon": "wi wi-yahoo-29"
+  },
+
+  "30": {
+    "label": "partly cloudy (day)",
+    "icon": "wi wi-yahoo-30"
+  },
+
+  "31": {
+    "label": "clear (night)",
+    "icon": "wi wi-yahoo-31"
+  },
+
+  "32": {
+    "label": "sunny",
+    "icon": "wi wi-yahoo-32"
+  },
+
+  "33": {
+    "label": "fair (night)",
+    "icon": "wi wi-yahoo-33"
+  },
+
+  "34": {
+    "label": "fair (day)",
+    "icon": "wi wi-yahoo-34"
+  },
+
+  "35": {
+    "label": "mixed rain and hail",
+    "icon": "wi wi-yahoo-35"
+  },
+
+  "36": {
+    "label": "hot",
+    "icon": "wi wi-yahoo-36"
+  },
+
+  "37": {
+    "label": "isolated thunderstorms",
+    "icon": "wi wi-yahoo-37"
+  },
+
+  "38": {
+    "label": "scattered thunderstorms",
+    "icon": "wi wi-yahoo-38"
+  },
+
+  "39": {
+    "label": "scattered thunderstorms",
+    "icon": "wi wi-yahoo-39"
+  },
+
+  "40": {
+    "label": "scattered showers",
+    "icon": "wi wi-yahoo-40"
+  },
+
+  "41": {
+    "label": "heavy snow",
+    "icon": "wi wi-yahoo-41"
+  },
+
+  "42": {
+    "label": "scattered snow showers",
+    "icon": "wi wi-yahoo-42"
+  },
+
+  "43": {
+    "label": "heavy snow",
+    "icon": "wi wi-yahoo-43"
+  },
+
+  "44": {
+    "label": "partly cloudy",
+    "icon": "wi wi-yahoo-44"
+  },
+
+  "45": {
+    "label": "thundershowers",
+    "icon": "wi wi-yahoo-45"
+  },
+
+  "46": {
+    "label": "snow showers",
+    "icon": "wi wi-yahoo-46"
+  },
+
+  "47": {
+    "label": "isolated thundershowers",
+    "icon": "wi wi-yahoo-47"
+  },
+
+  "3200": {
+    "label": "not available",
+    "icon": "wi wi-yahoo-3200"
+  }
+}

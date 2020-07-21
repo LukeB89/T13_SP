@@ -21,5 +21,12 @@ class Tables(models.Model):
     conn.close()
     cur.close()
 
+class Forecast_Weather(models.Model):
+    conn = psycopg2.connect(database=database, host=host, port=port, user=user, password=password)
+    cur = conn.cursor()
+    cur.execute("SELECT dt_iso FROM forecast_weather LIMIT 1")
+    rows = cur.fetchall()
+    conn.close()
+    cur.close()
 
 

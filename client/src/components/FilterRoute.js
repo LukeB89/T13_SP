@@ -2,6 +2,8 @@ import React from "react";
 import { Typeahead } from "react-bootstrap-typeahead";
 
 // Return an autocomplete box containing each of the routes.
+// Selecting a route will change map display to only
+// all of the stops associated with that route.
 function FilterRoute({ routeChoice, allRoutes }) {
   return (
     <div>
@@ -18,7 +20,7 @@ function FilterRoute({ routeChoice, allRoutes }) {
               }
             }
           } catch (error) {
-            console.log("error");
+            console.log("😱 Error: ", error);
           }
         }}
       />

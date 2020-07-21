@@ -11,6 +11,7 @@ import {
 } from "@react-google-maps/api";
 import Container from "react-bootstrap/Container";
 import Form from "react-bootstrap/Form";
+import Button from "react-bootstrap/Button";
 import styled from "styled-components";
 // Importing self-developed components.
 import CustomNavBar from "./components/CustomNavBar";
@@ -106,7 +107,7 @@ const allRoutes = duplicateRoutes.filter(
   (a, b) => duplicateRoutes.indexOf(a) === b
 );
 
-// Main function to draw the Map/Page.
+// Main function for the SPA, generating the Map/Page.
 export default function App() {
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: googleMapApiKey,
@@ -184,6 +185,14 @@ export default function App() {
     setInfoOpen(true);
   };
 
+  // These (below) are being used for marker display for the time being.
+  const [checker, setChecker] = useState("True");
+
+  const checkerChoice = () => {
+    setChecker(() => "False");
+  };
+  // These (above) are being used for marker display for the time being.
+
   if (loadError) return "Error";
   if (!isLoaded) return "Loading...";
 
@@ -196,8 +205,8 @@ export default function App() {
           panTo={panTo}
           stopChoice={stopChoice}
           routeChoice={routeChoice}
-          stopDescriptions={stopDescriptions}
           parsedStops={parsedStops}
+          stopDescriptions={stopDescriptions}
           allRoutes={allRoutes}
         />
 
@@ -212,34 +221,19 @@ export default function App() {
           >
             <Locate panTo={panTo} />
 
-            {/* Uncomment this section for route selection */}
-            {/* 1 of 2 -> only one of these at a time for now */}
             <RouteInfo
               route={routeString}
               markerLoadHandler={markerLoadHandler}
               markerClickHandler={markerClickHandler}
+              checkerChoice={checkerChoice}
             ></RouteInfo>
 
-            {/* Uncomment this section for all markers at once */}
-            {/* 2 of 2 -> only one of these at a time for now */}
-            {/* <MarkerClusterer
-              options={options}
-              maxZoom={15}
-              minimumClusterSize={4}
-            >
-              {(clusterer) =>
-                myStops.map((stop) => (
-                  <Marker
-                    icon={icon}
-                    key={stop.properties.id}
-                    position={stop.geometry.pos}
-                    clusterer={clusterer}
-                    onLoad={(marker) => markerLoadHandler(marker, stop)}
-                    onClick={(event) => markerClickHandler(event, stop)}
-                  />
-                ))
-              }
-            </MarkerClusterer> */}
+            <ClusteredMarkers
+              myStops={myStops}
+              markerLoadHandler={markerLoadHandler}
+              markerClickHandler={markerClickHandler}
+              checker={checker}
+            ></ClusteredMarkers>
 
             {infoOpen && selectedPlace && (
               <InfoWindow
@@ -247,8 +241,11 @@ export default function App() {
                 onCloseClick={() => setInfoOpen(false)}
               >
                 <div>
-                  <h3>Stop Number: {selectedPlace.properties.id}</h3>
-                  <h5>Routes: {selectedPlace.properties.routes.join(", ")}</h5>
+                  <h5>
+                    {selectedPlace.properties.fullname +
+                      ", stop " +
+                      selectedPlace.properties.id}
+                  </h5>
                   <RtpiApi number={selectedPlace.properties.id}></RtpiApi>
                 </div>
               </InfoWindow>
@@ -285,13 +282,21 @@ export default function App() {
                 // removing all displayed stops upon loading
                 onLoad={() => {
                   setRouteString("");
+                  setChecker("False");
                 }}
               />
             )}
           </GoogleMap>
         </Wrapper>
 
-        <Wrapper style={{ width: "25%", float: "right" }}>
+        <Wrapper
+          style={{
+            width: "25%",
+            float: "right",
+            maxHeight: "93vh",
+            overflowY: "scroll",
+          }}
+        >
           <Container style={{ paddingTop: "2vh" }}>
             <DateTimeSelector></DateTimeSelector>
             <Form>
@@ -312,10 +317,15 @@ export default function App() {
                 />
               </Form.Group>
             </Form>
-            <div
-              id="panel"
-              style={{ maxHeight: "67vh", overflowY: "scroll" }}
-            ></div>
+            <div id="panel"></div>
+            <Button
+              variant="secondary"
+              size="lg"
+              block
+              onClick={() => window.location.reload(false)}
+            >
+              Reload
+            </Button>
           </Container>
         </Wrapper>
       </Container>
@@ -341,14 +351,47 @@ function RouteInfo(props) {
   const uniqueMarkers = filteredMarkers.filter(
     (a, b) => filteredMarkers.indexOf(a) === b
   );
-
   return uniqueMarkers.map((stop) => (
     <Marker
       icon={icon}
       key={stop.properties.id}
       position={stop.geometry.pos}
-      onLoad={(marker) => props.markerLoadHandler(marker, stop)}
-      onClick={(event) => props.markerClickHandler(event, stop)}
+      onLoad={(marker) => {
+        // Will do for now - removing cluster upon selection of route.
+        props.checkerChoice("False");
+        props.markerLoadHandler(marker, stop);
+      }}
+      onClick={(event) => {
+        props.markerClickHandler(event, stop);
+      }}
     />
   ));
+}
+
+// Function that renders all of the Dublin Bus stops in clustered form.
+// props.checker being set to True means that they will all be displayed on
+// the first load. When a route is chosen from the RouteInfo function above,
+// props.cheker gets set to False and all of the markers are removed. This solution
+// is intended only to be temporary until something better comes up.
+function ClusteredMarkers(props) {
+  if (props.checker === "True") {
+    return (
+      <MarkerClusterer options={options} maxZoom={15} minimumClusterSize={4}>
+        {(clusterer) =>
+          props.myStops.map((stop) => (
+            <Marker
+              icon={icon}
+              key={stop.properties.id}
+              position={stop.geometry.pos}
+              clusterer={clusterer}
+              onLoad={(marker) => props.markerLoadHandler(marker, stop)}
+              onClick={(event) => props.markerClickHandler(event, stop)}
+            />
+          ))
+        }
+      </MarkerClusterer>
+    );
+  } else {
+    return null;
+  }
 }

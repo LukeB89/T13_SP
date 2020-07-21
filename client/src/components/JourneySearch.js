@@ -8,8 +8,8 @@ import {
   ComboboxOption,
 } from "@reach/combobox";
 
-// Generating the Origin search box with Google
-// Places and Autocomplete.
+// Generating a Search box with Google Places and Autocomplete.
+// For use in selecting journey origin and destination points.
 export default function JourneySearch({
   originChoice,
   destinationChoice,
