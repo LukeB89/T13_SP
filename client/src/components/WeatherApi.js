@@ -1,9 +1,11 @@
 import React from "react";
+import DateTimeSelector from "./DateTimeSelector";
 
 const axios = require("axios");
 
-const RtpiApi = (props) => {
+const WeatherApi = (props) => {
   const [weatherResponse, setWeatherResponse] = React.useState({});
+  console;
 
   React.useEffect(() => {
     axios
@@ -14,7 +16,7 @@ const RtpiApi = (props) => {
       })
       .then((res) => {
         const weatherResponse = res.data;
-        setWeatherResponse(rawStopData);
+        setWeatherResponse(weatherResponse);
       });
   }, []);
   return (

@@ -38,14 +38,14 @@ export default function JourneySearch({
     setValue(address, false);
     clearSuggestions();
 
-    if (placeholder == "Departure") {
+    if (String(placeholder) === "Departure") {
       try {
         const results = await getGeocode({ address });
         originChoice({ results });
       } catch (error) {
         console.log("😱 Error: ", error);
       }
-    } else if (placeholder == "Arrival") {
+    } else if (String(placeholder) === "Arrival") {
       try {
         const results = await getGeocode({ address });
         destinationChoice({ results });

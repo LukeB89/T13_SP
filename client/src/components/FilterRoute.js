@@ -14,7 +14,7 @@ function FilterRoute({ routeChoice, allRoutes }) {
         onChange={(route) => {
           try {
             for (var i = 0; i < allRoutes.length; i++) {
-              if (route == allRoutes[i]) {
+              if (String(route) === allRoutes[i]) {
                 const routeString = allRoutes[i];
                 routeChoice({ routeString });
               }

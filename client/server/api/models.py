@@ -21,6 +21,7 @@ class Tables(models.Model):
     conn.close()
     cur.close()
 
+
 class Forecast_Weather(models.Model):
     conn = psycopg2.connect(database=database, host=host, port=port, user=user, password=password)
     cur = conn.cursor()

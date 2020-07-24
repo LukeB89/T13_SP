@@ -19,7 +19,7 @@ export default function StopSearch({
         onChange={(address) => {
           try {
             for (var i = 0; i < parsedStops.length; i++) {
-              if (address == parsedStops[i].description) {
+              if (String(address) === parsedStops[i].description) {
                 const lat = parsedStops[i].geometry.lat;
                 const lng = parsedStops[i].geometry.lng;
                 const id = parsedStops[i].id;

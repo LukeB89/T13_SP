@@ -19,18 +19,22 @@ const RtpiApi = (props) => {
   };
   const [rawStopData, setRawStopData] = React.useState(placeholder);
 
-  React.useEffect(() => {
-    axios
-      .get(`/api/rtpi_api`, {
-        params: {
-          stopid: props.number,
-        },
-      })
-      .then((res) => {
-        const rawStopData = res.data;
-        setRawStopData(rawStopData);
-      });
-  }, []);
+  React.useEffect(
+    () => {
+      axios
+        .get(`/api/rtpi_api`, {
+          params: {
+            stopid: props.number,
+          },
+        })
+        .then((res) => {
+          const rawStopData = res.data;
+          setRawStopData(rawStopData);
+        });
+    },
+    // Maybe take away props.number and make this array empty.
+    [props.number]
+  );
 
   const stopData = rawStopData.results;
   const realInfo = stopData.map((info) => ({
@@ -40,7 +44,9 @@ const RtpiApi = (props) => {
     arrivaltime: info.duetime,
   }));
   if (realInfo === []) {
-    const realInfo = placeholder;
+    // this is used should the response be empty - to avoid an error
+    // might be okay to remove this line though - look into this more.
+    // const realInfo = placeholder;
   }
 
   return (

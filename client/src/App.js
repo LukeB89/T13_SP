@@ -23,6 +23,8 @@ import JourneySearch from "./components/JourneySearch";
 import RtpiApi from "./components/RtpiApi";
 import DateTimeSelector from "./components/DateTimeSelector";
 // Importing outside developed css.
+import "react-datepicker/dist/react-datepicker.css";
+import "./styles.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@reach/combobox/styles.css";
 // Importing Google Maps Api Key.
@@ -95,12 +97,12 @@ for (var i = 0; i < parsedStops.length; i++) {
 
 const routesArray = [];
 const duplicateRoutes = [];
-for (var i = 0; i < myStops.length; i++) {
-  routesArray.push(myStops[i].properties.routes);
+for (var j = 0; j < myStops.length; j++) {
+  routesArray.push(myStops[j].properties.routes);
 }
-for (var i = 0; i < routesArray.length; i++) {
-  for (var j = 0; j < routesArray[i].length; j++) {
-    duplicateRoutes.push(routesArray[i][j]);
+for (var k = 0; k < routesArray.length; k++) {
+  for (var l = 0; l < routesArray[k].length; l++) {
+    duplicateRoutes.push(routesArray[k][l]);
   }
 }
 const allRoutes = duplicateRoutes.filter(
@@ -113,26 +115,34 @@ export default function App() {
     googleMapsApiKey: googleMapApiKey,
     libraries,
   });
-  const [center, setCenter] = useState(dublinCenter);
+  const center = dublinCenter;
+  // const [center, setCenter] = useState(dublinCenter);
   const [zoom, setZoom] = useState(11);
-  // The things we need to track in state:
+  // The general things we need to track in state:
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [markerMap, setMarkerMap] = useState({});
   const [infoOpen, setInfoOpen] = useState(false);
-  const [markers, setMarkers] = React.useState([]);
-  const [selected, setSelected] = React.useState(null);
-  const [stopNumber, setStopNumber] = React.useState(0);
-  const [routeString, setRouteString] = React.useState("");
+  const [markers, setMarkers] = useState([]);
+  const [selected, setSelected] = useState(null);
+  const [stopNumber, setStopNumber] = useState(0);
+  const [routeString, setRouteString] = useState("");
   // The things for Directions we need to track in state.
   const [response, setResponse] = useState(null);
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
+  // This is TEMPORARILY being used to track in state which set of markers is displayed.
+  const [checker, setChecker] = useState("True");
+  // The things for selected time (Hour, Day, Month) we need to track in state.
+  const [selectedTime, setSelectedTime] = useState(new Date());
+  // const [timeDayMonth, setTimeDayMonth] = useState(["23", "Tue", "Jul"]);
+  const [timeDayMonth, setTimeDayMonth] = useState([0]);
 
   const mapRef = React.useRef();
   const onMapLoad = React.useCallback((map) => {
     mapRef.current = map;
   }, []);
 
+  // Orient the map to selected location.
   const panTo = React.useCallback(({ lat, lng }) => {
     mapRef.current.panTo({ lat, lng });
     mapRef.current.setZoom(16);
@@ -140,33 +150,6 @@ export default function App() {
     setMarkers((current) => []);
     setMarkers((current) => [...current, { lat: lat, lng: lng }]);
   }, []);
-  // Changing stop realtime info based on user choice.
-  const stopChoice = (number) => {
-    setStopNumber(() => parseInt(number.id));
-  };
-  // Changing origin info based on user choice.
-  const originChoice = (address) => {
-    setOrigin(() => address.results[0].formatted_address);
-  };
-  // Changing destination info based on user choice.
-  const destinationChoice = (address) => {
-    setDestination(() => address.results[0].formatted_address);
-  };
-  // Changing stops of route displayed on based on user choice.
-  const routeChoice = (route) => {
-    setRouteString(() => route.routeString);
-  };
-
-  const directionsCallback = (response) => {
-    if (response !== null) {
-      if (response.status === "OK") {
-        setResponse(() => ({
-          response,
-        }));
-      } else {
-      }
-    }
-  };
 
   // We have to create a mapping of our places to actual Marker objects
   const markerLoadHandler = (marker, stop) => {
@@ -185,13 +168,49 @@ export default function App() {
     setInfoOpen(true);
   };
 
-  // These (below) are being used for marker display for the time being.
-  const [checker, setChecker] = useState("True");
+  // Changing stop realtime info based on user choice.
+  const stopChoice = (number) => {
+    setStopNumber(() => parseInt(number.id));
+  };
+  // Changing origin info based on user choice.
+  const originChoice = (address) => {
+    setOrigin(() => address.results[0].formatted_address);
+  };
+  // Changing destination info based on user choice.
+  const destinationChoice = (address) => {
+    setDestination(() => address.results[0].formatted_address);
+  };
+  // Changing stops of route displayed on based on user choice.
+  const routeChoice = (route) => {
+    setRouteString(() => route.routeString);
+  };
 
+  // For generating a directions route on the map.
+  const directionsCallback = (response) => {
+    if (response !== null) {
+      if (response.status === "OK") {
+        setResponse(() => ({
+          response,
+        }));
+      } else {
+      }
+    }
+  };
+
+  // This is being used for Marker display for the time being.
   const checkerChoice = () => {
     setChecker(() => "False");
   };
-  // These (above) are being used for marker display for the time being.
+
+  const time = selectedTime.toTimeString().substring(0, 2);
+  const [day, month] = selectedTime.toDateString().split(" ");
+
+  // For setting the time in state.
+  const timeChoice = (selectedTime) => {
+    setSelectedTime(selectedTime);
+    setTimeDayMonth([time, day, month]);
+  };
+  // console.log("These are the time values", timeDayMonth);
 
   if (loadError) return "Error";
   if (!isLoaded) return "Loading...";
@@ -298,7 +317,11 @@ export default function App() {
           }}
         >
           <Container style={{ paddingTop: "2vh" }}>
-            <DateTimeSelector></DateTimeSelector>
+            <DateTimeSelector
+              selectedTime={selectedTime}
+              timeChoice={timeChoice}
+              timeDayMonth={timeDayMonth}
+            ></DateTimeSelector>
             <Form>
               <Form.Group controlId="formDeparture">
                 <JourneySearch
@@ -340,10 +363,8 @@ function RouteInfo(props) {
 
   for (var i = 0; i < myStops.length; i++) {
     for (var j = 0; j < myStops[i].properties.routes.length; j++) {
-      if (myStops[i].properties.routes[j] == props.route) {
+      if (String(myStops[i].properties.routes[j]) === props.route) {
         filteredMarkers.push(myStops[i]);
-        // } else if (props.route == "") {
-        //   filteredMarkers.push(myStops[i]);
       }
     }
   }
