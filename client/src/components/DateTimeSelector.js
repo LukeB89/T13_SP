@@ -10,7 +10,7 @@ const DateTimeSelector = (props) => {
   return (
     <Form>
       <Form.Group controlId="formTimeOfTravel">
-        <Form.Label>Time of Travel</Form.Label>
+        <Form.Label>Time of Travel: </Form.Label>
         <DatePicker
           selected={props.selectedTime}
           // onSelect={props.timeChoice}
@@ -23,6 +23,7 @@ const DateTimeSelector = (props) => {
           timeCaption="time"
           dateFormat="MMMM d, yyyy h:mm aa"
         />
+        <Form.Label style={{ paddingTop: "1vh" }}>Route: 46A</Form.Label>
       </Form.Group>
       <ModelApi timeDayMonth={props.timeDayMonth}></ModelApi>
     </Form>

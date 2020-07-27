@@ -19,6 +19,7 @@ import FilterRoute from "./components/FilterRoute";
 import StopSearch from "./components/StopSearch";
 import Locate from "./components/Locate";
 import JourneySearch from "./components/JourneySearch";
+import PredictionInput from "./components/PredictionInput";
 // import Api from "./components/Api";
 import RtpiApi from "./components/RtpiApi";
 import DateTimeSelector from "./components/DateTimeSelector";
@@ -66,6 +67,8 @@ const options = {
 };
 // Parsing the Stops data into various object shapes.
 const rawData = data.results;
+
+const dir1Nums46a = require("./data/46A_dir1_stops.json");
 
 const myStops = rawData.map((stop) => ({
   description: "Stop " + stop.stopid + ", " + stop.fullname,
@@ -125,6 +128,21 @@ export default function App() {
   const [markers, setMarkers] = useState([]);
   const [selected, setSelected] = useState(null);
   const [stopNumber, setStopNumber] = useState(0);
+  // Temporarily using these to track selected stop numbers
+  const [originNumber, setOriginNumber] = useState(0);
+  const [destinationNumber, setDestinationNumber] = useState(0);
+
+  const originNumberChoice = (number) => {
+    console.log("originNumberChoice", number);
+    setOriginNumber(() => parseInt(number.id));
+  };
+
+  const destinationNumberChoice = (number) => {
+    console.log("destinationNumberChoice", number);
+    setDestinationNumber(() => parseInt(number.id));
+  };
+  // Temporarily using these to track selected stop numbers
+
   const [routeString, setRouteString] = useState("");
   // The things for Directions we need to track in state.
   const [response, setResponse] = useState(null);
@@ -210,7 +228,7 @@ export default function App() {
     setSelectedTime(selectedTime);
     setTimeDayMonth([time, day, month]);
   };
-  // console.log("These are the time values", timeDayMonth);
+  console.log("These are the time values: date-day-month", timeDayMonth);
 
   if (loadError) return "Error";
   if (!isLoaded) return "Loading...";
@@ -317,11 +335,24 @@ export default function App() {
           }}
         >
           <Container style={{ paddingTop: "2vh" }}>
-            <DateTimeSelector
+            <PredictionInput
               selectedTime={selectedTime}
+              setSelectedTime={setSelectedTime}
               timeChoice={timeChoice}
               timeDayMonth={timeDayMonth}
-            ></DateTimeSelector>
+              parsedStops={parsedStops}
+              stopDescriptions={stopDescriptions}
+              originNumberChoice={originNumberChoice}
+              destinationNumberChoice={destinationNumberChoice}
+              originNumber={originNumber}
+              destinationNumber={destinationNumber}
+            />
+            {/* <DateTimeSelector
+              selectedTime={selectedTime}
+              setSelectedTime={setSelectedTime}
+              timeChoice={timeChoice}
+              timeDayMonth={timeDayMonth}
+            ></DateTimeSelector> */}
             <Form>
               <Form.Group controlId="formDeparture">
                 <JourneySearch

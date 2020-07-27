@@ -112,3 +112,21 @@ def model_result(request):
         {'temp': temp_df['temp'], 'humidity': temp_df['humidity'], 'clouds_all': cloud_df['clouds_all']})
     dfX = pd.concat([df_times, df_days, df_alt_month, df_weather], axis=1)
     return JsonResponse({'model_response': (int(round(rfr_.predict(dfX)[0])))})
+
+
+def percentile_result(request):
+    df = pd.read_csv('./static/route_46A_dir1_prcnt_data.csv', keep_default_na=True, sep=',\s+', delimiter=',',
+                     skipinitialspace=True)
+    df["DAYOFWEEK"].replace({5: "Sat", 6: "Sun", 0: "Mon", 1: "Tue", 2: "Wed", 3: "Thu", 4: "Fri"}, inplace=True)
+    hour = int(request.GET.get('chosenTime'))
+    day = request.GET.get('chosenDay')
+    origin = request.GET.get('origin')
+    destination = request.GET.get('destination')
+    model_response = int(request.GET.get('modelResponse'))
+    rowx = df[(df["HOUR"] == hour) & (df["DAYOFWEEK"] == day)]
+    prct = int(rowx[origin]) - int(rowx[destination])
+    prct /= 100
+    print("Percent!", prct)
+    journey_time = model_response * prct
+    print(journey_time)
+    return JsonResponse({'percentile_response': (int(round(journey_time)))})

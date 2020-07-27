@@ -41,6 +41,7 @@ export default function JourneySearch({
     if (String(placeholder) === "Departure") {
       try {
         const results = await getGeocode({ address });
+        console.log("first results", results);
         originChoice({ results });
       } catch (error) {
         console.log("😱 Error: ", error);
