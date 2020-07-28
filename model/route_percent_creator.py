@@ -152,6 +152,9 @@ def main():
                     continue
                 with open('prcnt_log.txt', 'a') as f:
                     f.write("Starting Route {}\n".format(route))
+
+                print("Route {} Directions: {}".format(route,leave_df["DIRECTION"].unique()))
+                continue
                 # Initialise Flag for checks
                 complete_1 = False
                 complete_2 = False
