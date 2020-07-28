@@ -72,25 +72,25 @@ def main():
             f.write("Starting Model Building\n\n")
         with open('model_log.txt', 'a') as f:
             f.write("Trying for Larger Route Model Building: {}% Less\n".format(i * 10))
-            train_fetr, train_trgt = clean_and_split_large(route, i/10)
-            # Create model for current route
-            randforest_model = RandomForestRegressor(n_estimators=16, max_features='auto',
-                                                     max_depth=18,
-                                                     oob_score=True, random_state=1).fit(
-                train_fetr, train_trgt)
-            # Save Model with current Route name
-            with open('models/route_{}_RF_model.pkl'.format(route), 'wb') as handle:
-                pickle.dump(randforest_model, handle, pickle.HIGHEST_PROTOCOL)
-            # Output Features used to dataframe for use when building predictions
-            if fetr_df[(fetr_df["Route"] == route)].empty:
-                fetr_df.loc[fetr_df.shape[0]] = [route, list(train_fetr.columns)]
-            # Update Tracker that model is complete
-            track_df.loc[track_df["Route"] == route, ["Model"]] = 1
-            # Update log
-            with open('model_log.txt', 'a') as f:
-                f.write("Route {} Model Built\n".format(route))
-            track_df.to_csv("model_tracker.csv", index=False)
-            fetr_df.to_csv("model_features.csv", index=False)
+        train_fetr, train_trgt = clean_and_split_large(route, i/10)
+        # Create model for current route
+        randforest_model = RandomForestRegressor(n_estimators=16, max_features='auto',
+                                                 max_depth=18,
+                                                 oob_score=True, random_state=1).fit(
+            train_fetr, train_trgt)
+        # Save Model with current Route name
+        with open('models/route_{}_RF_model.pkl'.format(route), 'wb') as handle:
+            pickle.dump(randforest_model, handle, pickle.HIGHEST_PROTOCOL)
+        # Output Features used to dataframe for use when building predictions
+        if fetr_df[(fetr_df["Route"] == route)].empty:
+            fetr_df.loc[fetr_df.shape[0]] = [route, list(train_fetr.columns)]
+        # Update Tracker that model is complete
+        track_df.loc[track_df["Route"] == route, ["Model"]] = 1
+        # Update log
+        with open('model_log.txt', 'a') as f:
+            f.write("Route {} Model Built\n".format(route))
+        track_df.to_csv("model_tracker.csv", index=False)
+        fetr_df.to_csv("model_features.csv", index=False)
 
     except Exception as e:
         with open('model_log.txt', 'a') as f:
