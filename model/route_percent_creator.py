@@ -150,6 +150,8 @@ def main():
                     with open('prcnt_log.txt', 'a') as f:
                         f.write("Route {} does not exist\n".format(route))
                     continue
+                with open('prcnt_log.txt', 'a') as f:
+                    f.write("Starting Route {}\n".format(route))
                 # Initialise Flag for checks
                 complete_1 = False
                 complete_2 = False
@@ -161,13 +163,19 @@ def main():
                 del leave_df
                 # Add the start time of each TRIPID journey, used in obtaining the duration into the route for the stop
                 dir_1_df = add_trip_start(dir_1_df)
+
                 dir_2_df = add_trip_start(dir_2_df)
+
                 # Add the duration into the route for each stop
                 dir_1_df["STOP_TRIP_DURATION"] = dir_1_df["ACTUALTIME_ARR"] - dir_1_df["STARTTRIPTIME"]
                 dir_2_df["STOP_TRIP_DURATION"] = dir_2_df["ACTUALTIME_ARR"] - dir_2_df["STARTTRIPTIME"]
                 # Build percent data table
                 dir_1_dict = build_dict(dir_1_df)
+                with open('prcnt_log.txt', 'a') as f:
+                    f.write("Completed  Direction 1\n")
                 dir_2_dict = build_dict(dir_2_df)
+                with open('prcnt_log.txt', 'a') as f:
+                    f.write("Completed  Direction 2\n")
                 # Output the data to csv files
                 complete_1 = csv_out(dir_1_dict, route, 1, list(dir_1_df["STOPPOINTID"].unique()))
                 complete_2 = csv_out(dir_2_dict, route, 2, list(dir_2_df["STOPPOINTID"].unique()))
