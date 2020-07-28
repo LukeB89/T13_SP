@@ -24,12 +24,6 @@ export default function ModelApi(props) {
           .then((res) => {
             const modelResponse = res.data;
             setModelResponse(modelResponse);
-            // setMessage({
-            //   message:
-            //     "This journey is estimated to take " +
-            //     modelResponse.model_response +
-            //     " minutes",
-            // });
 
             console.log(
               "setModelResponse has been triggered with the following values: ",
@@ -46,7 +40,11 @@ export default function ModelApi(props) {
 
   React.useEffect(
     () => {
-      if (parseInt(props.timeDayMonth) === 0) {
+      // Making sure nothing is renedered until stops have been chosen.
+      if (
+        parseInt(props.originNumber) === 0 ||
+        parseInt(props.destinationNumber) === 0
+      ) {
         // initial render should be nothing.
         return undefined;
       } else
@@ -64,12 +62,25 @@ export default function ModelApi(props) {
           .then((res) => {
             const percentileResponse = res.data;
             setPercentileResponse(percentileResponse);
-            setMessage({
-              message:
-                "This journey is estimated to take " +
-                percentileResponse.percentile_response +
-                " minutes",
-            });
+            if (parseInt(percentileResponse.percentile_response) < 0) {
+              setMessage({
+                message: "Please enter a correct combination of stops",
+              });
+            } else if (parseInt(percentileResponse.percentile_response) === 1) {
+              setMessage({
+                message:
+                  "This journey is estimated to take " +
+                  percentileResponse.percentile_response +
+                  " minute.",
+              });
+            } else {
+              setMessage({
+                message:
+                  "This journey is estimated to take " +
+                  percentileResponse.percentile_response +
+                  " minutes.",
+              });
+            }
 
             console.log(
               "setPercentileResponse has been triggered with the following values: ",

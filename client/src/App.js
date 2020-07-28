@@ -10,7 +10,7 @@ import {
   DirectionsService,
 } from "@react-google-maps/api";
 import Container from "react-bootstrap/Container";
-import Form from "react-bootstrap/Form";
+// import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import styled from "styled-components";
 // Importing self-developed components.
@@ -18,11 +18,12 @@ import CustomNavBar from "./components/CustomNavBar";
 import FilterRoute from "./components/FilterRoute";
 import StopSearch from "./components/StopSearch";
 import Locate from "./components/Locate";
-import JourneySearch from "./components/JourneySearch";
+// import JourneySearch from "./components/JourneySearch";
+// import StopsJourneySearch from "./components/StopsJourneySearch";
 import PredictionInput from "./components/PredictionInput";
 // import Api from "./components/Api";
 import RtpiApi from "./components/RtpiApi";
-import DateTimeSelector from "./components/DateTimeSelector";
+// import DateTimeSelector from "./components/DateTimeSelector";
 // Importing outside developed css.
 import "react-datepicker/dist/react-datepicker.css";
 import "./styles.css";
@@ -67,8 +68,6 @@ const options = {
 };
 // Parsing the Stops data into various object shapes.
 const rawData = data.results;
-
-const dir1Nums46a = require("./data/46A_dir1_stops.json");
 
 const myStops = rawData.map((stop) => ({
   description: "Stop " + stop.stopid + ", " + stop.fullname,
@@ -119,7 +118,6 @@ export default function App() {
     libraries,
   });
   const center = dublinCenter;
-  // const [center, setCenter] = useState(dublinCenter);
   const [zoom, setZoom] = useState(11);
   // The general things we need to track in state:
   const [selectedPlace, setSelectedPlace] = useState(null);
@@ -152,7 +150,8 @@ export default function App() {
   const [checker, setChecker] = useState("True");
   // The things for selected time (Hour, Day, Month) we need to track in state.
   const [selectedTime, setSelectedTime] = useState(new Date());
-  // const [timeDayMonth, setTimeDayMonth] = useState(["23", "Tue", "Jul"]);
+  var time = selectedTime.toTimeString().substring(0, 2);
+  var [day, month] = selectedTime.toDateString().split(" ");
   const [timeDayMonth, setTimeDayMonth] = useState([0]);
 
   const mapRef = React.useRef();
@@ -192,11 +191,15 @@ export default function App() {
   };
   // Changing origin info based on user choice.
   const originChoice = (address) => {
-    setOrigin(() => address.results[0].formatted_address);
+    console.log("originChoice triggered", address);
+    setOrigin(() => address);
+    // setOrigin(() => address.results[0].formatted_address);
   };
   // Changing destination info based on user choice.
   const destinationChoice = (address) => {
-    setDestination(() => address.results[0].formatted_address);
+    console.log("destinationChoice triggered", address);
+    setDestination(() => address);
+    // setDestination(() => address.results[0].formatted_address);
   };
   // Changing stops of route displayed on based on user choice.
   const routeChoice = (route) => {
@@ -220,11 +223,10 @@ export default function App() {
     setChecker(() => "False");
   };
 
-  const time = selectedTime.toTimeString().substring(0, 2);
-  const [day, month] = selectedTime.toDateString().split(" ");
-
   // For setting the time in state.
   const timeChoice = (selectedTime) => {
+    var time = selectedTime.toTimeString().substring(0, 2);
+    var [day, month] = selectedTime.toDateString().split(" ");
     setSelectedTime(selectedTime);
     setTimeDayMonth([time, day, month]);
   };
@@ -299,10 +301,10 @@ export default function App() {
             ))}
             {destination !== "" && origin !== "" && (
               <DirectionsService
-                // required
+                console={console.log("Origin hereaca", origin)}
                 options={{
-                  destination: destination,
-                  origin: origin,
+                  destination: { lat: destination.lat, lng: destination.lng },
+                  origin: { lat: origin.lat, lng: origin.lng },
                   travelMode: "TRANSIT",
                 }}
                 // required
@@ -331,7 +333,6 @@ export default function App() {
             width: "25%",
             float: "right",
             maxHeight: "93vh",
-            overflowY: "scroll",
           }}
         >
           <Container style={{ paddingTop: "2vh" }}>
@@ -340,20 +341,18 @@ export default function App() {
               setSelectedTime={setSelectedTime}
               timeChoice={timeChoice}
               timeDayMonth={timeDayMonth}
+              setTimeDayMonth={setTimeDayMonth}
               parsedStops={parsedStops}
               stopDescriptions={stopDescriptions}
               originNumberChoice={originNumberChoice}
               destinationNumberChoice={destinationNumberChoice}
               originNumber={originNumber}
               destinationNumber={destinationNumber}
+              originChoice={originChoice}
+              destinationChoice={destinationChoice}
+              panTo={panTo}
             />
-            {/* <DateTimeSelector
-              selectedTime={selectedTime}
-              setSelectedTime={setSelectedTime}
-              timeChoice={timeChoice}
-              timeDayMonth={timeDayMonth}
-            ></DateTimeSelector> */}
-            <Form>
+            {/* <Form>
               <Form.Group controlId="formDeparture">
                 <JourneySearch
                   panTo={panTo}
@@ -370,7 +369,7 @@ export default function App() {
                   placeholder={"Arrival"}
                 />
               </Form.Group>
-            </Form>
+            </Form> */}
             <div id="panel"></div>
             <Button
               variant="secondary"

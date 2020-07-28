@@ -12,13 +12,10 @@ const PredictionInput = (props) => {
   const dir1Nums46a = require("../data/46A_dir1_stops.json");
   const dir1Stops46a = [];
 
-  // console.log(dir1Nums46a[0]);
   for (var q = 0; q < props.parsedStops.length; q++) {
     for (var r = 0; r < dir1Nums46a.length; r++) {
-      // console.log(dir1Nums46a[r]);
-      if (dir1Nums46a[r] == parseInt(props.parsedStops[q].id)) {
+      if (dir1Nums46a[r] === parseInt(props.parsedStops[q].id)) {
         dir1Stops46a.push(props.parsedStops[q].description);
-        // console.log("yay", props.parsedStops[q].description);
       }
     }
   }
@@ -26,56 +23,75 @@ const PredictionInput = (props) => {
   return (
     <Form>
       <Form.Group controlId="formTimeOfTravel">
-        <Form.Label>Time of Travel: </Form.Label>
+        <Form.Label>
+          <strong>When are you travelling?</strong>
+        </Form.Label>
         <DatePicker
           selected={props.selectedTime}
-          // onSelect={props.timeChoice}
-          onChange={props.timeChoice}
-          // Problem here!: if using onSelect, the time value isn't picked up
-          // using onChange means there's a click delay in the values being set.
+          onChange={(date) => props.timeChoice(date)}
           showTimeSelect
           timeFormat="HH:mm"
           timeIntervals={60}
           timeCaption="time"
           dateFormat="MMMM d, yyyy h:mm aa"
         />
-        <Form.Label style={{ paddingTop: "1vh" }}>Route: 46A</Form.Label>
-        <Typeahead
-          id="basic-example"
-          options={dir1Stops46a}
-          maxVisible={2}
-          placeholder="Choose a departure stop..."
-          onChange={(address) => {
-            try {
-              for (var i = 0; i < props.parsedStops.length; i++) {
-                if (String(address) === props.parsedStops[i].description) {
-                  const id = props.parsedStops[i].id;
-                  props.originNumberChoice({ id });
+        <Form.Label style={{ paddingTop: "1vh" }}>
+          Route: <strong>46A</strong> Destination:{" "}
+          <strong>Dun Laoghaire</strong>
+        </Form.Label>
+        <Form>
+          <Form.Group controlId="formDeparture">
+            <Typeahead
+              id="basic-example"
+              options={dir1Stops46a}
+              maxVisible={2}
+              placeholder="Departing from: e.g. Stop 334, D'Olier Street"
+              onChange={(address) => {
+                try {
+                  for (var i = 0; i < props.parsedStops.length; i++) {
+                    if (String(address) === props.parsedStops[i].description) {
+                      const id = props.parsedStops[i].id;
+                      const lat = props.parsedStops[i].geometry.lat;
+                      const lng = props.parsedStops[i].geometry.lng;
+                      props.originChoice({ lat, lng });
+                      props.panTo({ lat, lng });
+                      props.originNumberChoice({ id });
+                    }
+                  }
+                } catch (error) {
+                  console.log("😱 Error: ", error);
                 }
-              }
-            } catch (error) {
-              console.log("😱 Error: ", error);
-            }
-          }}
-        />
-        <Typeahead
-          id="basic-example"
-          options={dir1Stops46a}
-          maxVisible={2}
-          placeholder="Choose an arrival stop..."
-          onChange={(address) => {
-            try {
-              for (var i = 0; i < props.parsedStops.length; i++) {
-                if (String(address) === props.parsedStops[i].description) {
-                  const id = props.parsedStops[i].id;
-                  props.destinationNumberChoice({ id });
+              }}
+            />
+          </Form.Group>
+        </Form>
+
+        <Form>
+          <Form.Group controlId="formArrival">
+            <Typeahead
+              id="basic-example"
+              options={dir1Stops46a}
+              maxVisible={2}
+              placeholder="Destination: e.g. Stop 2007, Stillorgan Road"
+              onChange={(address) => {
+                try {
+                  for (var i = 0; i < props.parsedStops.length; i++) {
+                    if (String(address) === props.parsedStops[i].description) {
+                      const id = props.parsedStops[i].id;
+                      const lat = props.parsedStops[i].geometry.lat;
+                      const lng = props.parsedStops[i].geometry.lng;
+                      props.destinationChoice({ lat, lng });
+                      props.panTo({ lat, lng });
+                      props.destinationNumberChoice({ id });
+                    }
+                  }
+                } catch (error) {
+                  console.log("😱 Error: ", error);
                 }
-              }
-            } catch (error) {
-              console.log("😱 Error: ", error);
-            }
-          }}
-        />
+              }}
+            />
+          </Form.Group>
+        </Form>
       </Form.Group>
       <ModelApi
         timeDayMonth={props.timeDayMonth}
@@ -87,38 +103,3 @@ const PredictionInput = (props) => {
 };
 
 export default PredictionInput;
-
-// // Generate a Typeahead search box that includes all of the stops.
-// // Choosing a stop will adjust the map to that stops location and place a red marker.
-// export default function StopSearch({
-//   panTo,
-//   stopChoice,
-//   stopDescriptions,
-//   parsedStops,
-// }) {
-//   return (
-//     <div>
-//       <Typeahead
-//         id="basic-example"
-//         options={stopDescriptions}
-//         maxVisible={2}
-//         placeholder="Choose a stop to locate on map..."
-//         onChange={(address) => {
-//           try {
-//             for (var i = 0; i < parsedStops.length; i++) {
-//               if (String(address) === parsedStops[i].description) {
-//                 const lat = parsedStops[i].geometry.lat;
-//                 const lng = parsedStops[i].geometry.lng;
-//                 const id = parsedStops[i].id;
-//                 panTo({ lat, lng });
-//                 stopChoice({ id });
-//               }
-//             }
-//           } catch (error) {
-//             console.log("😱 Error: ", error);
-//           }
-//         }}
-//       />
-//     </div>
-//   );
-// }

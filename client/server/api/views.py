@@ -124,9 +124,12 @@ def percentile_result(request):
     destination = request.GET.get('destination')
     model_response = int(request.GET.get('modelResponse'))
     rowx = df[(df["HOUR"] == hour) & (df["DAYOFWEEK"] == day)]
-    prct = int(rowx[origin]) - int(rowx[destination])
+    prct = int(rowx[destination]) - int(rowx[origin])
     prct /= 100
     print("Percent!", prct)
     journey_time = model_response * prct
     print(journey_time)
+    # if journey_time < 0:
+    #     return JsonResponse({'percentile_response': "Please enter a correct combination"})
+    # else:
     return JsonResponse({'percentile_response': (int(round(journey_time)))})
