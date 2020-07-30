@@ -102,24 +102,24 @@ def build_dict(df):
                     prcnt_dict["HOUR"].append(hour)
                 # For each stop id
                 for stopid in list(df["STOPPOINTID"].unique()):
-                    if not df[(df["MONTH"] == month) & (df["HOUR"] == hour) & (df["DAYOFWEEK"] == day)].empty:
-                        # Obtain the average time it took to get to the stop at that hour, month and DoW combination
-                        avg_stop_trip_duration = df[
-                            (df["MONTH"] == month) & (df["HOUR"] == hour) & (df["DAYOFWEEK"] == day) & (
-                                        df["STOPPOINTID"] == stopid)]["STOP_TRIP_DURATION"].mean()
-                        # Obtain the average time it took to complete the journey at that hour, month and DoW combination
-                        avg_trip_duration = df[(df["MONTH"] == month) & (df["HOUR"] == hour) & (df["DAYOFWEEK"] == day)][
-                            "ACTUAL_TRIP_DURATION"].mean()
+                    # Obtain the average time it took to get to the stop at that hour, month and DoW combination
+                    avg_stop_trip_duration = df[
+                        (df["MONTH"] == month) & (df["HOUR"] == hour) & (df["DAYOFWEEK"] == day) & (
+                                    df["STOPPOINTID"] == stopid)]["STOP_TRIP_DURATION"].mean()
+                    # Obtain the average time it took to complete the journey at that hour, month and DoW combination
+                    avg_trip_duration = df[(df["MONTH"] == month) & (df["HOUR"] == hour) & (df["DAYOFWEEK"] == day)][
+                        "ACTUAL_TRIP_DURATION"].mean()
+                    try:
                         # Calculate the percentage
                         stop_prcnt = (avg_stop_trip_duration/avg_trip_duration)*100
+                    except:
+                        stop_prcnt = "N/A"
 
-                        # Apply percentage to dictionary
-                        if stopid not in prcnt_dict:
-                            prcnt_dict[stopid] = [stop_prcnt]
-                        else:
-                            prcnt_dict[stopid].append(stop_prcnt)
-                else:
-                    continue
+                    # Apply percentage to dictionary
+                    if stopid not in prcnt_dict:
+                        prcnt_dict[stopid] = [stop_prcnt]
+                    else:
+                        prcnt_dict[stopid].append(stop_prcnt)
     return prcnt_dict
 
 def main():
