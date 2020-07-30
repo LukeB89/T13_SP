@@ -170,7 +170,7 @@ def main():
                     # Output the data to csv files
                     complete[num] = csv_out(dir_dict, route, direction, list(dir_df["STOPPOINTID"].unique()))
                 del leave_df
-                if complete[0] / complete[1]:
+                if complete[0] or complete[1]:
                     # Update Tracker that model is complete
                     track_df.loc[track_df["Route"] == route, ["Complete"]] = 1
                     with open('prcnt_log.txt', 'a') as f:
