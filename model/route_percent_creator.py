@@ -110,7 +110,7 @@ def build_dict(df):
                         avg_trip_duration = df[(df["MONTH"] == month) & (df["HOUR"] == hour) & (df["DAYOFWEEK"] == day)][
                             "ACTUAL_TRIP_DURATION"].mean()
                         # Calculate the percentage
-                            stop_prcnt = (avg_stop_trip_duration/avg_trip_duration)*100
+                        stop_prcnt = (avg_stop_trip_duration/avg_trip_duration)*100
 
                         # Apply percentage to dictionary
                         if stopid not in prcnt_dict:
