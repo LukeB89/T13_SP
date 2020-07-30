@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import sys
 
 def get_routes():
     """ A function to obtain the routes list"""
@@ -178,6 +179,7 @@ def main():
     except Exception as e:
         with open('prcnt_log.txt', 'a') as f:
             f.write("Error: {} \n".format(e))
+            f.write(sys.exc_info())
     finally:
         # output the tracker information
         track_df.to_csv("prcnt_tracker.csv", index=False)
