@@ -1,12 +1,14 @@
+// Importing outside developed components.
 import React from "react";
 import Table from "react-bootstrap/Table";
-
+// Promise based HTTP client - https://github.com/axios/axios.
 const axios = require("axios");
 
 // Makes GET request to Django API with user selected stopid as parameter.
 // Django makes GET request to the RTPI API, which React returns as a Table.
 // Clicking a bus stop's marker will display this Table.
 const RtpiApi = (props) => {
+  // A placeholder variable used while waiting for RTPI response.
   const placeholder = {
     results: [
       {
@@ -17,8 +19,11 @@ const RtpiApi = (props) => {
       },
     ],
   };
+  // The response from the backend we need to track in state:
   const [rawStopData, setRawStopData] = React.useState(placeholder);
 
+  // The Effect Hook used to perform side effects in this component.
+  // https://reactjs.org/docs/hooks-effect.html.
   React.useEffect(
     () => {
       axios
@@ -32,7 +37,7 @@ const RtpiApi = (props) => {
           setRawStopData(rawStopData);
         });
     },
-    // Maybe take away props.number and make this array empty.
+    // ?? - Maybe take away props.number and make this array empty.
     [props.number]
   );
 
@@ -43,15 +48,19 @@ const RtpiApi = (props) => {
     destination: info.destination,
     arrivaltime: info.duetime,
   }));
-  if (realInfo === []) {
-    // this is used should the response be empty - to avoid an error
-    // might be okay to remove this line though - look into this more.
-    // const realInfo = placeholder;
-  }
 
   return (
-    <div style={{ maxHeight: "15vh", overflowY: "scroll" }}>
-      <Table striped bordered hover size="sm">
+    <div
+      // CSS
+      style={{ maxHeight: "15vh", overflowY: "scroll" }}
+    >
+      <Table
+        // Inbuilt props: https://react-bootstrap.github.io/components/table/#table-api.
+        striped
+        bordered
+        hover
+        size="sm"
+      >
         <thead>
           <tr>
             <th>Route</th>

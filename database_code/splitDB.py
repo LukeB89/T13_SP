@@ -7,7 +7,6 @@ import traceback
 
 # Read DataBase info from the config file
 # Store in variables for use when making SQL Query's
-
 config = ConfigParser()
 config.read("../config.ini")
 options = config["DataBase"]

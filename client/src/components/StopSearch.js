@@ -1,17 +1,21 @@
+// Importing outside developed components.
 import React from "react";
 import { Typeahead } from "react-bootstrap-typeahead";
 
 // Generate a Typeahead search box that includes all of the stops.
 // Choosing a stop will adjust the map to that stops location and place a red marker.
 export default function StopSearch({
+  // Receiving props - Functions defined in App.js.
   panTo,
   stopChoice,
-  stopDescriptions,
+  // Receiving props - Stop data defined in App.js.
   parsedStops,
+  stopDescriptions,
 }) {
   return (
     <div>
       <Typeahead
+        // Inbuilt props: https://github.com/ericgio/react-bootstrap-typeahead/blob/master/docs/API.md#typeahead.
         id="basic-example"
         options={stopDescriptions}
         maxVisible={2}

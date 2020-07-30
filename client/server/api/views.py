@@ -4,22 +4,17 @@ import numpy as np
 import pickle
 import sklearn
 import json
-from .models import Tables
-from .models import Forecast_Weather
+from .models import ForecastWeather
 from django.http import JsonResponse
 import warnings
+
 warnings.filterwarnings('ignore')
 
 
-def hello(request):
-    all_tables = Tables.rows
-    names = []
-    for rows in all_tables:
-        names.append(rows[2] + " ")
-    return JsonResponse({'response_text': names})
-
-
 def rtpi_api(request):
+    """Returns to the frontend the real time passenger information data for the requested stop.
+
+    Receive via GET request the users chosen stop. """
     real_time_array = []
     stop_id = request.GET.get('stopid')
     url = "https://data.smartdublin.ie/cgi-bin/rtpi/realtimebusinformation?stopid=" + stop_id + "&operator=bac"
@@ -31,22 +26,44 @@ def rtpi_api(request):
 
 
 def weather_test(request):
-    one_line = Forecast_Weather.rows
+    one_line = ForecastWeather.rows
     array = []
     for rows in one_line:
         array.append(rows)
     return JsonResponse({'weather_response': array})
 
 
+def route_stops(request):
+    """ Returns to the frontend the sequence of stops associated with the user
+    selected route and direction of route.
+
+    Receives via GET request the users desired route and direction"""
+    route = request.GET.get('chosenRoute')
+    print("hello, route here", route)
+    direction = request.GET.get('chosenDirection')
+    df = pd.read_csv("./static/percentile_tables/route_" + route + "_dir" + direction + "_prcnt_data.csv"
+                     , keep_default_na=True,
+                     sep=',\s+', delimiter=',', skipinitialspace=True)
+    requested_route_stops = list(df.columns)[4:]
+    return JsonResponse({'route_stops_response': requested_route_stops})
+
+
 def model_result(request):
+    """ Returns to the frontend the predicted time for the total length of the
+    selected route going in the selected direction.
+
+    Receives via GET request the users desired hour, day and month of travel. """
+    route = request.GET.get('chosenRoute')
+    direction = request.GET.get('chosenDirection')
     # Load the pickle file
-    with open('./static/pickle/RANDOM_FOREST_2018_46A_1.pkl', 'rb') as pickle_file:
+    with open("./static/pickle/RANDOM_FOREST_2018_" + route + "_" + direction + ".pkl", 'rb') as pickle_file:
         rfr_ = pickle.load(pickle_file)
     hour = int(request.GET.get('chosenTime'))
     day = request.GET.get('chosenDay')
     month = request.GET.get('chosenMonth')
-    # Dataframe to hold current time
+    # Dataframes for the hours of the day
     df_times = pd.DataFrame({hour: [hour]})
+    # Create dummy columns for all of the hours.
     df_times['5'] = np.where((df_times[hour] == 5), 1, 0)
     df_times['6'] = np.where((df_times[hour] == 6), 1, 0)
     df_times['7'] = np.where((df_times[hour] == 7), 1, 0)
@@ -95,14 +112,15 @@ def model_result(request):
     df_alt_month['November'] = np.where((df_month[month] == "Nov"), 1, 0)
     df_alt_month['October'] = np.where((df_month[month] == "Oct"), 1, 0)
     df_alt_month['September'] = np.where((df_month[month] == "Sep"), 1, 0)
-    # Call to the weather api for the current weather conditions
+    # Call to the weather api for the current weather conditions.
+    # TODO - We must instead include a call to the weather database.
     WEATHER_URI = "http://api.openweathermap.org/data/2.5/weather"
     weather_api = "0af2c4378e1bfb001a3e457cc32410be"
     response = requests.get(WEATHER_URI, params={"id": 2964574, "appid": weather_api})
-    # parse the data
+    # Parse the data
     data = response.text
     parsed = json.loads(data)
-    # create dataframes
+    # Create dataframes from the weather.
     temp_df = pd.DataFrame(parsed['main'], index=[0])
     temp_df.temp[0] = temp_df.temp[0] - 273.15  # kelvin
     cloud_df = pd.DataFrame(parsed['clouds'], index=[0])
@@ -110,13 +128,20 @@ def model_result(request):
     # Dataframe to hold correct weather input for model
     df_weather = pd.DataFrame(
         {'temp': temp_df['temp'], 'humidity': temp_df['humidity'], 'clouds_all': cloud_df['clouds_all']})
+    # Final dataframe with the shape expected by the model.
     dfX = pd.concat([df_times, df_days, df_alt_month, df_weather], axis=1)
     return JsonResponse({'model_response': (int(round(rfr_.predict(dfX)[0])))})
 
 
 def percentile_result(request):
-    df = pd.read_csv('./static/route_46A_dir1_prcnt_data.csv', keep_default_na=True, sep=',\s+', delimiter=',',
-                     skipinitialspace=True)
+    """ Returns to the frontend the length of time of the users journey as a percentile result of the total.
+
+    Receives via GET request the users desired hour, origin and destination stops,
+    and the response from the model for the total time of the selected route. """
+    route = request.GET.get('chosenRoute')
+    direction = request.GET.get('chosenDirection')
+    df = pd.read_csv("./static/percentile_tables/route_" + route + "_dir" + direction + "_prcnt_data.csv",
+                     keep_default_na=True, sep=',\s+', delimiter=',', skipinitialspace=True)
     df["DAYOFWEEK"].replace({5: "Sat", 6: "Sun", 0: "Mon", 1: "Tue", 2: "Wed", 3: "Thu", 4: "Fri"}, inplace=True)
     hour = int(request.GET.get('chosenTime'))
     day = request.GET.get('chosenDay')
@@ -126,10 +151,5 @@ def percentile_result(request):
     rowx = df[(df["HOUR"] == hour) & (df["DAYOFWEEK"] == day)]
     prct = int(rowx[destination]) - int(rowx[origin])
     prct /= 100
-    print("Percent!", prct)
     journey_time = model_response * prct
-    print(journey_time)
-    # if journey_time < 0:
-    #     return JsonResponse({'percentile_response': "Please enter a correct combination"})
-    # else:
     return JsonResponse({'percentile_response': (int(round(journey_time)))})

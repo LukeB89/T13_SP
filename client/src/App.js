@@ -10,23 +10,15 @@ import {
   DirectionsService,
 } from "@react-google-maps/api";
 import Container from "react-bootstrap/Container";
-// import Form from "react-bootstrap/Form";
-import Button from "react-bootstrap/Button";
 import styled from "styled-components";
 // Importing self-developed components.
 import CustomNavBar from "./components/CustomNavBar";
 import FilterRoute from "./components/FilterRoute";
 import StopSearch from "./components/StopSearch";
 import Locate from "./components/Locate";
-// import JourneySearch from "./components/JourneySearch";
-// import StopsJourneySearch from "./components/StopsJourneySearch";
 import PredictionInput from "./components/PredictionInput";
-// import Api from "./components/Api";
 import RtpiApi from "./components/RtpiApi";
-// import DateTimeSelector from "./components/DateTimeSelector";
 // Importing outside developed css.
-import "react-datepicker/dist/react-datepicker.css";
-import "./styles.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@reach/combobox/styles.css";
 // Importing Google Maps Api Key.
@@ -118,41 +110,44 @@ export default function App() {
     libraries,
   });
   const center = dublinCenter;
-  const [zoom, setZoom] = useState(11);
+  // eslint-disable-next-line
+  const [zoom, setZoom] = useState(11); // removing unwanted warning.
   // The general things we need to track in state:
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [markerMap, setMarkerMap] = useState({});
   const [infoOpen, setInfoOpen] = useState(false);
   const [markers, setMarkers] = useState([]);
-  const [selected, setSelected] = useState(null);
-  const [stopNumber, setStopNumber] = useState(0);
-  // Temporarily using these to track selected stop numbers
+  // eslint-disable-next-line
+  const [selected, setSelected] = useState(null); // removing unwanted warning.
+  // eslint-disable-next-line
+  const [stopNumber, setStopNumber] = useState(0); // removing unwanted warning.
+  // These are being used to track selected stop numbers
   const [originNumber, setOriginNumber] = useState(0);
   const [destinationNumber, setDestinationNumber] = useState(0);
-
-  const originNumberChoice = (number) => {
-    console.log("originNumberChoice", number);
-    setOriginNumber(() => parseInt(number.id));
-  };
-
-  const destinationNumberChoice = (number) => {
-    console.log("destinationNumberChoice", number);
-    setDestinationNumber(() => parseInt(number.id));
-  };
-  // Temporarily using these to track selected stop numbers
-
+  // This is used to track the string value of selected routes.
   const [routeString, setRouteString] = useState("");
-  // The things for Directions we need to track in state.
+  // The things for Directions (Service and Renderer) we need to track in state.
   const [response, setResponse] = useState(null);
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
-  // This is TEMPORARILY being used to track in state which set of markers is displayed.
-  const [checker, setChecker] = useState("True");
+  // This is being used to track in state which set of markers is displayed. (Clusters or Route Markers)
+  const [markerSelection, setMarkerSelection] = useState("True");
   // The things for selected time (Hour, Day, Month) we need to track in state.
   const [selectedTime, setSelectedTime] = useState(new Date());
-  var time = selectedTime.toTimeString().substring(0, 2);
-  var [day, month] = selectedTime.toDateString().split(" ");
-  const [timeDayMonth, setTimeDayMonth] = useState([0]);
+  // Setting the time, day and month values as the current time.
+  // This allows for user to make prediction for journey that occurs at
+  // this time without having to select the time.
+  const initialTime = selectedTime.toTimeString().substring(0, 2);
+  const [initialDay, initialMonth] = selectedTime.toDateString().split(" ");
+  // An array containing time data for model input.
+  const [timeDayMonth, setTimeDayMonth] = useState([
+    initialTime,
+    initialDay,
+    initialMonth,
+  ]);
+  // Track user selected routes and directions.
+  const [routeSelect, setRouteSelect] = React.useState("");
+  const [directionSelect, setDirectionSelect] = React.useState();
 
   const mapRef = React.useRef();
   const onMapLoad = React.useCallback((map) => {
@@ -163,9 +158,17 @@ export default function App() {
   const panTo = React.useCallback(({ lat, lng }) => {
     mapRef.current.panTo({ lat, lng });
     mapRef.current.setZoom(16);
+    // Resetting the drawn route anytime this functions is called.
+    setDestination("");
     // Allowing only one marker on the map at a time.
     setMarkers((current) => []);
     setMarkers((current) => [...current, { lat: lat, lng: lng }]);
+  }, []);
+
+  // Orient the map to the selected route.
+  const panTwo = React.useCallback(({ lat, lng }) => {
+    mapRef.current.panTo({ lat, lng });
+    mapRef.current.setZoom(12);
   }, []);
 
   // We have to create a mapping of our places to actual Marker objects
@@ -210,6 +213,11 @@ export default function App() {
   const directionsCallback = (response) => {
     if (response !== null) {
       if (response.status === "OK") {
+        console.log("response here", response);
+        // console.log(
+        //   "Here is the name of Google's favoured route, ",
+        //   response.routes[0].legs[0].steps[0].transit.line.short_name
+        // );
         setResponse(() => ({
           response,
         }));
@@ -218,15 +226,26 @@ export default function App() {
     }
   };
 
-  // This is being used for Marker display for the time being.
-  const checkerChoice = () => {
-    setChecker(() => "False");
+  //  For which set of markers to display (Clusters or Route Markers).
+  const markerSelectionChoice = () => {
+    setMarkerSelection(() => "False");
+  };
+
+  // For setting the selected origin stop number in state.
+  const originNumberChoice = (number) => {
+    console.log("originNumberChoice", number);
+    setOriginNumber(() => parseInt(number.id));
+  };
+  // For setting the selected destination stop number in state.
+  const destinationNumberChoice = (number) => {
+    console.log("destinationNumberChoice", number);
+    setDestinationNumber(() => parseInt(number.id));
   };
 
   // For setting the time in state.
   const timeChoice = (selectedTime) => {
-    var time = selectedTime.toTimeString().substring(0, 2);
-    var [day, month] = selectedTime.toDateString().split(" ");
+    const time = selectedTime.toTimeString().substring(0, 2);
+    const [day, month] = selectedTime.toDateString().split(" ");
     setSelectedTime(selectedTime);
     setTimeDayMonth([time, day, month]);
   };
@@ -239,43 +258,63 @@ export default function App() {
     <div>
       <Container fluid>
         <CustomNavBar
+          // Passing in props - Custom built components.
           FilterRoute={FilterRoute}
           StopSearch={StopSearch}
+          // Passing in props - Functions defined above.
           panTo={panTo}
           stopChoice={stopChoice}
           routeChoice={routeChoice}
+          panTwo={panTwo}
+          // Passing in props - Stop data defined above.
           parsedStops={parsedStops}
           stopDescriptions={stopDescriptions}
           allRoutes={allRoutes}
         />
 
-        <Wrapper style={{ width: "75%", float: "left" }}>
+        <Wrapper
+          // CSS
+          style={{ width: "75%", float: "left" }}
+        >
           {/* Render the Google Map */}
           <GoogleMap
+            // Inbuilt props: https://react-google-maps-api-docs.netlify.app/#googlemap.
             mapContainerStyle={mapContainerStyle}
             center={center}
             zoom={zoom}
             options={mapOptions}
             onLoad={onMapLoad}
           >
-            <Locate panTo={panTo} />
+            <Locate
+              // Passing in props - Functions defined above.
+              panTo={panTo}
+              setResponse={setResponse}
+              // Passing in props - Variables defined above.
+              // ?? Is this required?
+              response={response}
+            />
 
             <RouteInfo
-              route={routeString}
+              // Passing in props - Functions defined above.
               markerLoadHandler={markerLoadHandler}
               markerClickHandler={markerClickHandler}
-              checkerChoice={checkerChoice}
-            ></RouteInfo>
+              markerSelectionChoice={markerSelectionChoice}
+              // Passing in props - Stop data defined above.
+              route={routeString}
+            />
 
             <ClusteredMarkers
-              myStops={myStops}
+              // Passing in props - Functions defined above.
               markerLoadHandler={markerLoadHandler}
               markerClickHandler={markerClickHandler}
-              checker={checker}
-            ></ClusteredMarkers>
+              markerSelection={markerSelection}
+              // Passing in props - Stop data defined above.
+              myStops={myStops}
+            />
 
             {infoOpen && selectedPlace && (
               <InfoWindow
+                // Inbuilt props: https://react-google-maps-api-docs.netlify.app/#infowindow.
                 anchor={markerMap[selectedPlace.properties.id]}
                 onCloseClick={() => setInfoOpen(false)}
               >
@@ -285,13 +324,17 @@ export default function App() {
                       ", stop " +
                       selectedPlace.properties.id}
                   </h5>
-                  <RtpiApi number={selectedPlace.properties.id}></RtpiApi>
+                  <RtpiApi
+                    // Passing in props - Stop data defined above.
+                    number={selectedPlace.properties.id}
+                  />
                 </div>
               </InfoWindow>
             )}
             {/* Markers dropped when stop has been chosen or geolocation activated. */}
             {markers.map((marker) => (
               <Marker
+                // Inbuilt props: https://react-google-maps-api-docs.netlify.app/#marker.
                 key={`${marker.lat}-${marker.lng}`}
                 position={{ lat: marker.lat, lng: marker.lng }}
                 onClick={() => {
@@ -301,11 +344,18 @@ export default function App() {
             ))}
             {destination !== "" && origin !== "" && (
               <DirectionsService
-                console={console.log("Origin hereaca", origin)}
+                // Inbuilt props: https://react-google-maps-api-docs.netlify.app/#directionsservice.
                 options={{
-                  destination: { lat: destination.lat, lng: destination.lng },
-                  origin: { lat: origin.lat, lng: origin.lng },
+                  destination: destination,
+                  origin: origin,
                   travelMode: "TRANSIT",
+                  provideRouteAlternatives: true,
+                  transitOptions: {
+                    modes: ["BUS"],
+                    routingPreference: "FEWER_TRANSFERS",
+                    departureTime: selectedTime,
+                  },
+                  // transitDetails: { trip_short_name: "145" },
                 }}
                 // required
                 callback={directionsCallback}
@@ -313,15 +363,26 @@ export default function App() {
             )}
             {response !== null && (
               <DirectionsRenderer
+                // Inbuilt props: https://react-google-maps-api-docs.netlify.app/#directionsrenderer.
+                // what you might try to do is iterate over
+                // the route list and find the one with short_name of
+                // selected route, then render that one using routeIndex : i.
                 // required
                 options={{
                   directions: response.response,
+                  // hideRouteList: true,
+                  polylineOptions: {
+                    strokeColor: "red",
+                    strokeWeight: 5,
+                  },
+                  suppressInfoWindows: true,
+                  suppressMarkers: false,
                 }}
-                panel={document.getElementById("panel")}
+                // panel={document.getElementById("panel")}
                 // removing all displayed stops upon loading
                 onLoad={() => {
                   setRouteString("");
-                  setChecker("False");
+                  setMarkerSelection("False");
                 }}
               />
             )}
@@ -337,48 +398,29 @@ export default function App() {
         >
           <Container style={{ paddingTop: "2vh" }}>
             <PredictionInput
-              selectedTime={selectedTime}
-              setSelectedTime={setSelectedTime}
-              timeChoice={timeChoice}
-              timeDayMonth={timeDayMonth}
-              setTimeDayMonth={setTimeDayMonth}
-              parsedStops={parsedStops}
-              stopDescriptions={stopDescriptions}
-              originNumberChoice={originNumberChoice}
-              destinationNumberChoice={destinationNumberChoice}
-              originNumber={originNumber}
-              destinationNumber={destinationNumber}
+              // Passing in props - Functions defined above.
+              panTo={panTo}
               originChoice={originChoice}
               destinationChoice={destinationChoice}
-              panTo={panTo}
+              originNumberChoice={originNumberChoice}
+              destinationNumberChoice={destinationNumberChoice}
+              timeChoice={timeChoice}
+              // Passing in props - Variables defined above.
+              originNumber={originNumber}
+              destinationNumber={destinationNumber}
+              selectedTime={selectedTime}
+              setSelectedTime={setSelectedTime}
+              timeDayMonth={timeDayMonth}
+              setTimeDayMonth={setTimeDayMonth}
+              routeSelect={routeSelect}
+              setRouteSelect={setRouteSelect}
+              directionSelect={directionSelect}
+              setDirectionSelect={setDirectionSelect}
+              // Passing in props - Stop data defined above.
+              parsedStops={parsedStops}
+              stopDescriptions={stopDescriptions}
             />
-            {/* <Form>
-              <Form.Group controlId="formDeparture">
-                <JourneySearch
-                  panTo={panTo}
-                  originChoice={originChoice}
-                  placeholder={"Departure"}
-                />
-              </Form.Group>
-            </Form>
-            <Form>
-              <Form.Group controlId="formArrival">
-                <JourneySearch
-                  panTo={panTo}
-                  destinationChoice={destinationChoice}
-                  placeholder={"Arrival"}
-                />
-              </Form.Group>
-            </Form> */}
             <div id="panel"></div>
-            <Button
-              variant="secondary"
-              size="lg"
-              block
-              onClick={() => window.location.reload(false)}
-            >
-              Reload
-            </Button>
           </Container>
         </Wrapper>
       </Container>
@@ -402,6 +444,7 @@ function RouteInfo(props) {
   const uniqueMarkers = filteredMarkers.filter(
     (a, b) => filteredMarkers.indexOf(a) === b
   );
+
   return uniqueMarkers.map((stop) => (
     <Marker
       icon={icon}
@@ -409,7 +452,7 @@ function RouteInfo(props) {
       position={stop.geometry.pos}
       onLoad={(marker) => {
         // Will do for now - removing cluster upon selection of route.
-        props.checkerChoice("False");
+        props.markerSelectionChoice("False");
         props.markerLoadHandler(marker, stop);
       }}
       onClick={(event) => {
@@ -420,12 +463,12 @@ function RouteInfo(props) {
 }
 
 // Function that renders all of the Dublin Bus stops in clustered form.
-// props.checker being set to True means that they will all be displayed on
+// props.markerSelection being set to True means that they will all be displayed on
 // the first load. When a route is chosen from the RouteInfo function above,
 // props.cheker gets set to False and all of the markers are removed. This solution
 // is intended only to be temporary until something better comes up.
 function ClusteredMarkers(props) {
-  if (props.checker === "True") {
+  if (props.markerSelection === "True") {
     return (
       <MarkerClusterer options={options} maxZoom={15} minimumClusterSize={4}>
         {(clusterer) =>
