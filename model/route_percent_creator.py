@@ -16,6 +16,13 @@ def clean_and_sep(df, direction):
     dir_df = df[df["DIRECTION"] == direction]
     # Clean up memory
     del df
+    # Set subset columns to check for duplicates
+    cols = ["TRIPID", "PROGRNUMBER", "STOPPOINTID", "PLANNEDTIME_ARR", "PLANNEDTIME_DEP", "ACTUALTIME_ARR",
+            "ACTUALTIME_DEP", "VEHICLEID", "DELAY", "TIMEATSTOP", "LINEID", "DIRECTION",
+            "PLANNED_TRIP_DURATION", "ACTUAL_TRIP_DURATION", "YEAR", "MONTH", "DAY", "HOUR", "DAYOFWEEK"]
+    # drop duplicated entries
+    dir_df.drop_duplicates(subset=cols, keep='last', inplace=True)
+
     # Obtain trip ids that have the full route (based on last PROGRNUMBER)
     dir_tripids = list(dir_df[(dir_df["PROGRNUMBER"] == max_dir)]["TRIPID"].unique())
     # Seperate out the data
@@ -175,11 +182,17 @@ def main():
                     track_df.loc[track_df["Route"] == route, ["Complete"]] = 1
                     with open('prcnt_log.txt', 'a') as f:
                         f.write("Percent Table complete for Route {}\n\n".format(route))
+            else:
+                with open('prcnt_log.txt', 'a') as f:
+                    f.write("Route {} already exists\n".format(route))
 
     except Exception as e:
         with open('prcnt_log.txt', 'a') as f:
             f.write("Error: {} \n".format(e))
-            f.write(sys.exc_info())
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            f.write(exc_type)
+            f.write(exc_value)
+            f.write(exc_traceback)
     finally:
         # output the tracker information
         track_df.to_csv("prcnt_tracker.csv", index=False)
