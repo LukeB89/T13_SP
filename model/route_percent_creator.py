@@ -7,41 +7,33 @@ def get_routes():
     route_df = pd.read_csv("../database_code/routes_tripids.csv")
     return route_df["Routes"]
 
-def clean_and_sep(df):
+def clean_and_sep(df, direction):
     """ A function to clean and seperate out a route based on its direction"""
     # Find the last stop in the route based on sequential PROGRNUMBER
-    max_dir_1 = max(list(df[df["DIRECTION"] == 1]["PROGRNUMBER"].unique()))
-    max_dir_2 = max(list(df[df["DIRECTION"] == 2]["PROGRNUMBER"].unique()))
+    max_dir = max(list(df[df["DIRECTION"] == direction]["PROGRNUMBER"].unique()))
     # Split into individual dataframes based on direction
-    dir_1_df = df[df["DIRECTION"] == 1]
-    dir_2_df = df[df["DIRECTION"] == 2]
+    dir_df = df[df["DIRECTION"] == direction]
     # Clean up memory
     del df
     # Obtain trip ids that have the full route (based on last PROGRNUMBER)
-    dir_1_tripids = list(dir_1_df[(dir_1_df["PROGRNUMBER"] == max_dir_1)]["TRIPID"].unique())
-    dir_2_tripids = list(dir_2_df[dir_2_df["PROGRNUMBER"] == max_dir_2]["TRIPID"].unique())
+    dir_tripids = list(dir_df[(dir_df["PROGRNUMBER"] == max_dir)]["TRIPID"].unique())
     # Seperate out the data
-    ids_present = dir_1_df['TRIPID'].isin(dir_1_tripids)
-    dir_1_df = dir_1_df.loc[ids_present]
-    ids_present = dir_2_df['TRIPID'].isin(dir_2_tripids)
-    dir_2_df = dir_2_df.loc[ids_present]
-    # Obtain trip ids that have a first stop( based on PROGRNUMBER = 1)
-    dir_1_tripids = list(dir_1_df[(dir_1_df["PROGRNUMBER"] == 1)]["TRIPID"].unique())
-    dir_2_tripids = list(dir_2_df[dir_2_df["PROGRNUMBER"] == 1]["TRIPID"].unique())
-    # Seperate out the data
-    ids_present = dir_1_df['TRIPID'].isin(dir_1_tripids)
-    dir_1_df = dir_1_df.loc[ids_present]
-    ids_present = dir_2_df['TRIPID'].isin(dir_2_tripids)
-    dir_2_df = dir_2_df.loc[ids_present]
-    # Reset the indexs
-    dir_1_df.reset_index(drop=True, inplace=True)
-    dir_2_df.reset_index(drop=True, inplace=True)
-    # Memory cleanup
-    del dir_1_tripids, dir_2_tripids
-    # Return dataframes
-    return dir_1_df, dir_2_df
+    ids_present = dir_df['TRIPID'].isin(dir_tripids)
+    dir_df = dir_df.loc[ids_present]
 
-def csv_out(data, route, dir, stoppoints):
+    # Obtain trip ids that have a first stop( based on PROGRNUMBER = 1)
+    dir_tripids = list(dir_df[(dir_df["PROGRNUMBER"] == 1)]["TRIPID"].unique())
+    # Seperate out the data
+    ids_present = dir_df['TRIPID'].isin(dir_tripids)
+    dir_df = dir_df.loc[ids_present]
+    # Reset the indexs
+    dir_df.reset_index(drop=True, inplace=True)
+    # Memory cleanup
+    del dir_tripids
+    # Return dataframes
+    return dir_df
+
+def csv_out(data, route, direction, stoppoints):
     """A function to output percentile data to its own CSV file"""
     # Initialise column names
     cols = ["ROUTE", "MONTH", "HOUR", "DAYOFWEEK"]
@@ -51,10 +43,10 @@ def csv_out(data, route, dir, stoppoints):
     del cols
     prcnt_df = pd.concat([prcnt_df, pd.DataFrame.from_dict(data)])
     # Output into individual CSV file
-    if not os.path.isfile("prcnts/route_{}_dir_{}_prcnt_data.csv.csv".format(route,dir)):
-        prcnt_df.to_csv("prcnts/route_{}_dir_{}_prcnt_data.csv".format(route,dir), index=False)
+    if not os.path.isfile("prcnts/route_{}_dir_{}_prcnt_data.csv.csv".format(route,direction)):
+        prcnt_df.to_csv("prcnts/route_{}_dir_{}_prcnt_data.csv".format(route,direction), index=False)
     else:
-        with open("prcnts/route_{}_dir_{}_prcnt_data.csv".format(route,dir), 'a') as f:
+        with open("prcnts/route_{}_dir_{}_prcnt_data.csv".format(route,direction), 'a') as f:
             prcnt_df.to_csv(f, header=False, index=False)
     return True
 
@@ -153,36 +145,28 @@ def main():
                 with open('prcnt_log.txt', 'a') as f:
                     f.write("Starting Route {}\n".format(route))
 
-                print("Route {} Directions: {}".format(route,leave_df["DIRECTION"].unique()))
-                continue
+
                 # Initialise Flag for checks
-                complete_1 = False
-                complete_2 = False
+                complete = [False, False]
                 # Sort the dataframe by TRIPID, PROGRNUMBER and DAY. The Reason for DAY being included is that
                 # Sometimes there a multiple entried of the same TRIPID but on different days
                 leave_df = leave_df.sort_values(by=["TRIPID", "PROGRNUMBER", "DAY"], ascending=[True, True, True])
-                # Clean the data to obtain a complete route split data for each route
-                dir_1_df, dir_2_df = clean_and_sep(leave_df)
+                for num, direction in enumerate(list(leave_df["DIRECTION"].unique())):
+                    # Clean the data to obtain a complete route split data for each route
+                    dir_df= clean_and_sep(leave_df, direction)
+                    # Add the start time of each TRIPID journey, used in obtaining the duration into the route for the stop
+                    dir_df = add_trip_start(dir_df)
+
+                    # Add the duration into the route for each stop
+                    dir_df["STOP_TRIP_DURATION"] = dir_df["ACTUALTIME_ARR"] - dir_df["STARTTRIPTIME"]
+                    # Build percent data table
+                    dir_dict = build_dict(dir_df)
+                    with open('prcnt_log.txt', 'a') as f:
+                        f.write("Completed  Direction {}\n".format(direction))
+                    # Output the data to csv files
+                    complete[num] = csv_out(dir_dict, route, direction, list(dir_df["STOPPOINTID"].unique()))
                 del leave_df
-                # Add the start time of each TRIPID journey, used in obtaining the duration into the route for the stop
-                dir_1_df = add_trip_start(dir_1_df)
-
-                dir_2_df = add_trip_start(dir_2_df)
-
-                # Add the duration into the route for each stop
-                dir_1_df["STOP_TRIP_DURATION"] = dir_1_df["ACTUALTIME_ARR"] - dir_1_df["STARTTRIPTIME"]
-                dir_2_df["STOP_TRIP_DURATION"] = dir_2_df["ACTUALTIME_ARR"] - dir_2_df["STARTTRIPTIME"]
-                # Build percent data table
-                dir_1_dict = build_dict(dir_1_df)
-                with open('prcnt_log.txt', 'a') as f:
-                    f.write("Completed  Direction 1\n")
-                dir_2_dict = build_dict(dir_2_df)
-                with open('prcnt_log.txt', 'a') as f:
-                    f.write("Completed  Direction 2\n")
-                # Output the data to csv files
-                complete_1 = csv_out(dir_1_dict, route, 1, list(dir_1_df["STOPPOINTID"].unique()))
-                complete_2 = csv_out(dir_2_dict, route, 2, list(dir_2_df["STOPPOINTID"].unique()))
-                if complete_1 & complete_2:
+                if complete[0] / complete[1]:
                     # Update Tracker that model is complete
                     track_df.loc[track_df["Route"] == route, ["Complete"]] = 1
                     with open('prcnt_log.txt', 'a') as f:
