@@ -4,6 +4,7 @@ import numpy as np
 import pickle
 import sklearn
 import json
+import os.path
 from .models import ForecastWeather
 from django.http import JsonResponse
 import warnings
@@ -37,15 +38,46 @@ def route_stops(request):
     """ Returns to the frontend the sequence of stops associated with the user
     selected route and direction of route.
 
-    Receives via GET request the users desired route and direction"""
+    Receives via GET request the users desired route and chosen stop, then
+    determines in which direction the user is going."""
     route = request.GET.get('chosenRoute')
-    print("hello, route here", route)
-    direction = request.GET.get('chosenDirection')
-    df = pd.read_csv("./static/percentile_tables/route_" + route + "_dir" + direction + "_prcnt_data.csv"
-                     , keep_default_na=True,
-                     sep=',\s+', delimiter=',', skipinitialspace=True)
-    requested_route_stops = list(df.columns)[4:]
-    return JsonResponse({'route_stops_response': requested_route_stops})
+    stop = request.GET.get('chosenStop')
+    print("Django function route_stops, route here", route)
+    print("Django function route_stops, stop here", stop)
+    print(type(stop))
+    # insert a check for the existence of a file here.
+    # if not os.path.isfile("./static/percentile_tables/route_" + route + "_dir_2_prcnt_data.csv") \
+    #         and os.path.isfile("./static/percentile_tables/route_" + route + "_dir_1_prcnt_data.csv"):
+    #     df1 = pd.read_csv("./static/percentile_tables/route_" + route + "_dir_1_prcnt_data.csv"
+    #                       , keep_default_na=True,
+    #                       sep=',\s+', delimiter=',', skipinitialspace=True)
+    #     requested_route_stops = list(df1.columns)[df1.columns.get_loc(stop) + 1:]
+    #     requested_route_stops.insert(0, "1")
+    #     return JsonResponse({'route_stops_response': requested_route_stops})
+    # else:
+    df1 = pd.read_csv("./static/percentile_tables/route_" + route + "_dir_1_prcnt_data.csv"
+                      , keep_default_na=True,
+                      sep=',\s+', delimiter=',', skipinitialspace=True)
+    df2 = pd.read_csv("./static/percentile_tables/route_" + route + "_dir_2_prcnt_data.csv"
+                      , keep_default_na=True,
+                      sep=',\s+', delimiter=',', skipinitialspace=True)
+    if stop in df1.columns and stop in df2.columns:
+        if df1.columns.get_loc(stop) < df2.columns.get_loc(stop):
+            requested_route_stops = list(df1.columns)[df1.columns.get_loc(stop) + 1:]
+            requested_route_stops.insert(0, "1")
+            return JsonResponse({'route_stops_response': requested_route_stops})
+        else:
+            requested_route_stops = list(df2.columns)[df2.columns.get_loc(stop) + 1:]
+            requested_route_stops.insert(0, "2")
+            return JsonResponse({'route_stops_response': requested_route_stops})
+    elif stop not in df1.columns and stop in df2.columns:
+        requested_route_stops = list(df2.columns)[df2.columns.get_loc(stop) + 1:]
+        requested_route_stops.insert(0, "2")
+        return JsonResponse({'route_stops_response': requested_route_stops})
+    else:
+        requested_route_stops = list(df1.columns)[df1.columns.get_loc(stop) + 1:]
+        requested_route_stops.insert(0, "1")
+        return JsonResponse({'route_stops_response': requested_route_stops})
 
 
 def model_result(request):
@@ -55,12 +87,17 @@ def model_result(request):
     Receives via GET request the users desired hour, day and month of travel. """
     route = request.GET.get('chosenRoute')
     direction = request.GET.get('chosenDirection')
+    print("Django function model_result, route here", route)
+    print("Django function model_result, direction here", direction)
     # Load the pickle file
     with open("./static/pickle/RANDOM_FOREST_2018_" + route + "_" + direction + ".pkl", 'rb') as pickle_file:
         rfr_ = pickle.load(pickle_file)
     hour = int(request.GET.get('chosenTime'))
     day = request.GET.get('chosenDay')
     month = request.GET.get('chosenMonth')
+    print("Django function model_result, hour here", hour)
+    print("Django function model_result, day here", day)
+    print("Django function model_result, month here", month)
     # Dataframes for the hours of the day
     df_times = pd.DataFrame({hour: [hour]})
     # Create dummy columns for all of the hours.
@@ -140,7 +177,9 @@ def percentile_result(request):
     and the response from the model for the total time of the selected route. """
     route = request.GET.get('chosenRoute')
     direction = request.GET.get('chosenDirection')
-    df = pd.read_csv("./static/percentile_tables/route_" + route + "_dir" + direction + "_prcnt_data.csv",
+    print("Django function percentile_result, route here", route)
+    print("Django function percentile_result, direction here", direction)
+    df = pd.read_csv("./static/percentile_tables/route_" + route + "_dir_" + direction + "_prcnt_data.csv",
                      keep_default_na=True, sep=',\s+', delimiter=',', skipinitialspace=True)
     df["DAYOFWEEK"].replace({5: "Sat", 6: "Sun", 0: "Mon", 1: "Tue", 2: "Wed", 3: "Thu", 4: "Fri"}, inplace=True)
     hour = int(request.GET.get('chosenTime'))

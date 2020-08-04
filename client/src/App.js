@@ -9,8 +9,9 @@ import {
   DirectionsRenderer,
   DirectionsService,
 } from "@react-google-maps/api";
+import Row from "react-bootstrap/Row";
+import Col from "react-bootstrap/Col";
 import Container from "react-bootstrap/Container";
-import styled from "styled-components";
 // Importing self-developed components.
 import CustomNavBar from "./components/CustomNavBar";
 import FilterRoute from "./components/FilterRoute";
@@ -25,11 +26,6 @@ import "@reach/combobox/styles.css";
 import googleMapApiKey from "./config";
 // Defining libraries for Google Places
 const libraries = ["places"];
-// Defined styling for separation of page displayed.
-const Wrapper = styled.main`
-  width: 100%;
-  height: 100%;
-`;
 // Importing the Dublin Bus API stops data
 const data = require("./data/DublinBusStops.json");
 // // consts: [53.349804, -6.260310] - Dublin
@@ -119,6 +115,7 @@ export default function App() {
   const [markers, setMarkers] = useState([]);
   // eslint-disable-next-line
   const [selected, setSelected] = useState(null); // removing unwanted warning.
+  // Consider removing this variable stopNumber, see if it can be merged with either originNumber or destinationNumber.
   // eslint-disable-next-line
   const [stopNumber, setStopNumber] = useState(0); // removing unwanted warning.
   // These are being used to track selected stop numbers
@@ -145,9 +142,12 @@ export default function App() {
     initialDay,
     initialMonth,
   ]);
-  // Track user selected routes and directions.
+  // Track state of user selected routes and directions.
   const [routeSelect, setRouteSelect] = React.useState("");
-  const [directionSelect, setDirectionSelect] = React.useState();
+  const [directionSelect, setDirectionSelect] = React.useState(undefined);
+  // Track state of filtered bus stops.
+  const [filteredStops, setFilteredStops] = React.useState([]);
+  const [filteredStopsLatLng, setFilteredStopsLatLng] = React.useState([]);
 
   const mapRef = React.useRef();
   const onMapLoad = React.useCallback((map) => {
@@ -163,12 +163,6 @@ export default function App() {
     // Allowing only one marker on the map at a time.
     setMarkers((current) => []);
     setMarkers((current) => [...current, { lat: lat, lng: lng }]);
-  }, []);
-
-  // Orient the map to the selected route.
-  const panTwo = React.useCallback(({ lat, lng }) => {
-    mapRef.current.panTo({ lat, lng });
-    mapRef.current.setZoom(12);
   }, []);
 
   // We have to create a mapping of our places to actual Marker objects
@@ -194,13 +188,13 @@ export default function App() {
   };
   // Changing origin info based on user choice.
   const originChoice = (address) => {
-    console.log("originChoice triggered", address);
+    // console.log("originChoice triggered", address);
     setOrigin(() => address);
     // setOrigin(() => address.results[0].formatted_address);
   };
   // Changing destination info based on user choice.
   const destinationChoice = (address) => {
-    console.log("destinationChoice triggered", address);
+    // console.log("destinationChoice triggered", address);
     setDestination(() => address);
     // setDestination(() => address.results[0].formatted_address);
   };
@@ -213,11 +207,31 @@ export default function App() {
   const directionsCallback = (response) => {
     if (response !== null) {
       if (response.status === "OK") {
-        console.log("response here", response);
-        // console.log(
-        //   "Here is the name of Google's favoured route, ",
-        //   response.routes[0].legs[0].steps[0].transit.line.short_name
-        // );
+        console.log(
+          "routeSelect in directionsCallback",
+          routeSelect.toLowerCase()
+        );
+        // This is the array you want associated with
+        // the response instead of the one that google assigns.
+        const selectedRouteArray = [];
+        for (var i = 0; i < response.routes.length; i++) {
+          for (var j = 0; j < response.routes[i].legs.length; j++) {
+            for (var k = 0; k < response.routes[i].legs[j].steps.length; k++) {
+              if (
+                // making sure that WALKING is excluded since it will not contain bus name information
+                response.routes[i].legs[j].steps[k].travel_mode == "TRANSIT" &&
+                // locating the first occurence of the users selected route
+                String(
+                  response.routes[i].legs[j].steps[k].transit.line.short_name
+                ) === routeSelect.toLowerCase()
+              ) {
+                selectedRouteArray.push(response.routes[i]);
+              }
+            }
+          }
+        }
+        // setting the routes array to be the one containing our desired bus route.
+        response.routes = selectedRouteArray;
         setResponse(() => ({
           response,
         }));
@@ -249,33 +263,56 @@ export default function App() {
     setSelectedTime(selectedTime);
     setTimeDayMonth([time, day, month]);
   };
-  console.log("These are the time values: date-day-month", timeDayMonth);
+  // console.log("These are the time values: date-day-month", timeDayMonth);
+
+  const filteredStopsChoice = (filteredMarkers) => {
+    setFilteredStops(() => filteredMarkers);
+  };
+
+  const filteredStopsLatLngChoice = (filteredMarkers) => {
+    setFilteredStopsLatLng(() => filteredMarkers);
+  };
+
+  // Orient the map to the selected route.
+  // Will need to have passed in to it an array of stop locations.
+  const panTwo = React.useCallback(
+    // For some reason there is delay in this function receiving filteredStopsLatLng.
+    // You had this problem before, with the time. How the hell did you fix that?!
+    () => {
+      // console.log(newBounds, "here is geometry in panTwo in App.js");
+      // mapRef.current.fitBounds(newBounds);
+      // mapRef.current.setZoom(12);
+      // Resetting the drawn route anytime this functions is called.
+      setDestination("");
+    },
+    []
+  );
 
   if (loadError) return "Error";
   if (!isLoaded) return "Loading...";
 
   return (
-    <div>
-      <Container fluid>
-        <CustomNavBar
-          // Passing in props - Custom built components.
-          FilterRoute={FilterRoute}
-          StopSearch={StopSearch}
-          // Passing in props - Functions defined above.
-          panTo={panTo}
-          stopChoice={stopChoice}
-          routeChoice={routeChoice}
-          panTwo={panTwo}
-          // Passing in props - Stop data defined above.
-          parsedStops={parsedStops}
-          stopDescriptions={stopDescriptions}
-          allRoutes={allRoutes}
-        />
-
-        <Wrapper
-          // CSS
-          style={{ width: "75%", float: "left" }}
-        >
+    <Container fluid>
+      <Row>
+        <Col sm={12}>
+          <CustomNavBar
+            // Passing in props - Custom built components.
+            FilterRoute={FilterRoute}
+            StopSearch={StopSearch}
+            // Passing in props - Functions defined above.
+            panTo={panTo}
+            stopChoice={stopChoice}
+            routeChoice={routeChoice}
+            panTwo={panTwo}
+            // Passing in props - Stop data defined above.
+            parsedStops={parsedStops}
+            stopDescriptions={stopDescriptions}
+            allRoutes={allRoutes}
+          />
+        </Col>
+      </Row>
+      <Row>
+        <Col lg={9}>
           {/* Render the Google Map */}
           <GoogleMap
             // Inbuilt props: https://react-google-maps-api-docs.netlify.app/#googlemap.
@@ -289,9 +326,6 @@ export default function App() {
               // Passing in props - Functions defined above.
               panTo={panTo}
               setResponse={setResponse}
-              // Passing in props - Variables defined above.
-              // ?? Is this required?
-              response={response}
             />
 
             <RouteInfo
@@ -299,8 +333,11 @@ export default function App() {
               markerLoadHandler={markerLoadHandler}
               markerClickHandler={markerClickHandler}
               markerSelectionChoice={markerSelectionChoice}
+              filteredStopsLatLngChoice={filteredStopsLatLngChoice}
+              mapRef={mapRef}
               // Passing in props - Stop data defined above.
               route={routeString}
+              filteredStopsChoice={filteredStopsChoice}
             />
 
             <ClusteredMarkers
@@ -310,6 +347,7 @@ export default function App() {
               markerSelection={markerSelection}
               // Passing in props - Stop data defined above.
               myStops={myStops}
+              setFilteredStops={setFilteredStops}
             />
 
             {infoOpen && selectedPlace && (
@@ -387,56 +425,66 @@ export default function App() {
               />
             )}
           </GoogleMap>
-        </Wrapper>
-
-        <Wrapper
-          style={{
-            width: "25%",
-            float: "right",
-            maxHeight: "93vh",
-          }}
+        </Col>
+        <Col
+          lg={3}
+          // CSS
+          style={{ paddingTop: "2vh" }}
         >
-          <Container style={{ paddingTop: "2vh" }}>
-            <PredictionInput
-              // Passing in props - Functions defined above.
-              panTo={panTo}
-              originChoice={originChoice}
-              destinationChoice={destinationChoice}
-              originNumberChoice={originNumberChoice}
-              destinationNumberChoice={destinationNumberChoice}
-              timeChoice={timeChoice}
-              // Passing in props - Variables defined above.
-              originNumber={originNumber}
-              destinationNumber={destinationNumber}
-              selectedTime={selectedTime}
-              setSelectedTime={setSelectedTime}
-              timeDayMonth={timeDayMonth}
-              setTimeDayMonth={setTimeDayMonth}
-              routeSelect={routeSelect}
-              setRouteSelect={setRouteSelect}
-              directionSelect={directionSelect}
-              setDirectionSelect={setDirectionSelect}
-              // Passing in props - Stop data defined above.
-              parsedStops={parsedStops}
-              stopDescriptions={stopDescriptions}
-            />
-            <div id="panel"></div>
-          </Container>
-        </Wrapper>
-      </Container>
-    </div>
+          <PredictionInput
+            // Passing in props - Functions defined above.
+            panTo={panTo}
+            panTwo={panTwo}
+            originChoice={originChoice}
+            destinationChoice={destinationChoice}
+            originNumberChoice={originNumberChoice}
+            destinationNumberChoice={destinationNumberChoice}
+            timeChoice={timeChoice}
+            routeChoice={routeChoice}
+            // Passing in props - Variables defined above.
+            setOrigin={setOrigin}
+            setDestination={setDestination}
+            originNumber={originNumber}
+            destinationNumber={destinationNumber}
+            selectedTime={selectedTime}
+            setSelectedTime={setSelectedTime}
+            timeDayMonth={timeDayMonth}
+            setTimeDayMonth={setTimeDayMonth}
+            routeSelect={routeSelect}
+            setRouteSelect={setRouteSelect}
+            directionSelect={directionSelect}
+            setDirectionSelect={setDirectionSelect}
+            setResponse={setResponse}
+            // Passing in props - Stop data defined above.
+            parsedStops={parsedStops}
+            stopDescriptions={stopDescriptions}
+            allRoutes={allRoutes}
+            filteredStops={filteredStops}
+            filteredStopsLatLng={filteredStopsLatLng}
+          />
+          <div id="panel"></div>
+        </Col>
+      </Row>
+    </Container>
   );
 }
 
 // Function that filters the markers on the map
 // according to a user selected route.
 function RouteInfo(props) {
+  // i want to be able to define this variable outside of this function.
+  // but it has to be populated in here.
+  // when it has been populated it shoiuld be set in App.
   const filteredMarkers = [];
+  const filteredStopStrings = [];
+  const filteredStopsCoords = [];
 
   for (var i = 0; i < myStops.length; i++) {
     for (var j = 0; j < myStops[i].properties.routes.length; j++) {
       if (String(myStops[i].properties.routes[j]) === props.route) {
         filteredMarkers.push(myStops[i]);
+        filteredStopStrings.push(myStops[i].description);
+        filteredStopsCoords.push(myStops[i].geometry.pos);
       }
     }
   }
@@ -445,19 +493,31 @@ function RouteInfo(props) {
     (a, b) => filteredMarkers.indexOf(a) === b
   );
 
+  const bounds = new window.google.maps.LatLngBounds(); // create an empty new bounds object
+  for (i = 0; i < filteredStopsCoords.length; i++) {
+    bounds.extend(filteredStopsCoords[i]);
+    // console.log("hi there", filteredStopsCoords[i]);
+  }
+  // console.log(filteredMarkers);
   return uniqueMarkers.map((stop) => (
     <Marker
       icon={icon}
       key={stop.properties.id}
       position={stop.geometry.pos}
       onLoad={(marker) => {
+        props.filteredStopsLatLngChoice(filteredStopsCoords);
+        props.filteredStopsChoice(filteredStopStrings);
         // Will do for now - removing cluster upon selection of route.
         props.markerSelectionChoice("False");
         props.markerLoadHandler(marker, stop);
+        // Changing the bounds to fit map to chosen route's markers.
+        props.mapRef.current.fitBounds(bounds);
+        props.mapRef.current.setZoom(13);
       }}
       onClick={(event) => {
         props.markerClickHandler(event, stop);
       }}
+      animation={window.google.maps.Animation.DROP}
     />
   ));
 }

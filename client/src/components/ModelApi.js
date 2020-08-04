@@ -9,23 +9,31 @@ export default function ModelApi(props) {
   const [modelResponse, setModelResponse] = useState({ model_response: "" });
   // eslint-disable-next-line
   const [percentileResponse, setPercentileResponse] = useState();
-  console.log("ModelApi - selected route here: )", props.routeSelect[0]);
-
+  // console.log("ModelApi - routeSelect here: ", props.routeSelect);
+  // console.log("Here is directionSelect in ModelApi", props.directionSelect);
   // The Effect Hook used to perform side effects in this component.
   // https://reactjs.org/docs/hooks-effect.html.
   React.useEffect(
     () => {
       if (
-        props.routeSelect[0] === undefined ||
+        String(props.routeSelect) === "" ||
         props.directionSelect === undefined
       ) {
+        // console.log("ModelApi undefined ONE has been triggered");
         // initial render should be nothing.
         return undefined;
-      } else
+      } else {
+        // console.log("ModelApi has been fucking triggered");
+        console.log(
+          "And here is what ModelSelect/model_result has been triggered with: 1 routeSelect: ",
+          props.routeSelect,
+          "2: directionSelect",
+          props.directionSelect
+        );
         axios
           .get(`/api/model_result`, {
             params: {
-              chosenRoute: props.routeSelect[0],
+              chosenRoute: props.routeSelect,
               chosenDirection: props.directionSelect,
               chosenTime: props.timeDayMonth[0],
               chosenDay: props.timeDayMonth[1],
@@ -38,33 +46,48 @@ export default function ModelApi(props) {
 
             console.log(
               "setModelResponse has been triggered with the following values: ",
-              props.routeSelect[0],
+              props.routeSelect,
               props.directionSelect,
               props.timeDayMonth[0],
               props.timeDayMonth[1],
               props.timeDayMonth[2]
             );
           });
+      }
     },
     // Listening for changes to props in order to
     // trigger a call to the API  to re-render the component.
-    [props]
+    [props.routeSelect, props.directionSelect]
   );
 
   React.useEffect(
     () => {
       // Making sure nothing is renedered until stops have been chosen.
       if (
-        parseInt(props.originNumber) === 0 ||
-        parseInt(props.destinationNumber) === 0
+        props.directionSelect === undefined ||
+        String(modelResponse.model_response) === "" ||
+        props.destinationNumber === 0
       ) {
         // initial render should be nothing.
         return undefined;
-      } else
+      } else if (props.routeSelect !== "46A") {
+        console.log(
+          "ModelApi (percentile result) undefined TWO has been triggered"
+        );
+        setMessage({
+          message: "No model for route this route yet.",
+        });
+      } else {
+        console.log(
+          "And here is what ModelApi/percentile_result triggered with: 1 directionSelect: ",
+          props.directionSelect,
+          "2: modelResponse.model_response",
+          modelResponse.model_response
+        );
         axios
           .get(`/api/percentile_result`, {
             params: {
-              chosenRoute: props.routeSelect[0],
+              chosenRoute: props.routeSelect,
               chosenDirection: props.directionSelect,
               chosenTime: props.timeDayMonth[0],
               chosenDay: props.timeDayMonth[1],
@@ -106,11 +129,12 @@ export default function ModelApi(props) {
               modelResponse.model_response
             );
           });
+      }
     },
     // Listening for changes to props in order to
     // trigger a call to the API  to re-render the component.
     // eslint-disable-next-line
-    [props]
+    [props, modelResponse.model_response, props.routeSelect]
     // // React Hook React.useEffect has a missing dependency: 'modelResponse.model_response'. Either include it or remove the dependency array.
     // TODO - Receiving the above error, find a fix - have disabled with eslint disable next line for now.
   );

@@ -46,25 +46,7 @@ function CustomNavbar({
         // Inbuilt props: https://react-bootstrap.github.io/components/navs/#nav-props.
         className="mr-auto"
       ></Nav>
-      <Form
-        // CSS
-        style={{ paddingRight: "1vw" }}
-      >
-        <Form.Group
-          // Inbuilt props: https://react-bootstrap.github.io/components/forms/#form-group-props.
-          controlId="formRealTime"
-          // CSS
-          style={{ paddingTop: "1.6vh", width: "6.5vw" }}
-        >
-          <FilterRoute
-            // Passing in props - Functions defined in App.js.
-            routeChoice={routeChoice}
-            panTwo={panTwo}
-            // Passing in props - Stop data defined in App.js.
-            allRoutes={allRoutes}
-          />
-        </Form.Group>
-      </Form>
+
       <Form
         // CSS
         style={{ paddingRight: "1vw" }}

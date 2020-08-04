@@ -16,19 +16,47 @@ import ".././styles.css";
 const PredictionInput = (props) => {
   // Tracking this in state in order to enable a submit button to trigger the ModelApi response.
   const [destinationSelected, setDestinationSelected] = React.useState([]);
-  // Get an array of the stops associated with the users selected route
-  const getStops = RouteStopsApi(props.routeSelect, props.directionSelect);
+
+  // Getting a list of stops and the direction from this api route.
+  // Takes the users chosen route and origin stop as input.
+  console.log(
+    "originNumber going into RouteStipsApi from PredictionInput",
+    props.originNumber
+  );
+  const getStops = RouteStopsApi(props.routeSelect, props.originNumber);
+  console.log(
+    "getStops is here in PredictionInput where the direction indicator is being delivered",
+    getStops
+  );
+
+  // // console.log("PredictionInput received routeSelect", props.routeSelect);
+  // For the Typeaheads containing bus route destination, user origin & user destination .
+  const refUserOrigin = React.useRef();
+  const refUserDestination = React.useRef();
+
+  const directionIndicator = parseInt(getStops[0]);
+  // console.log("this is the direction indicator.", directionIndicator);
+
+  // getStops.splice(0, 1); // Removes the first element of getStops only if it is equal to 1 or 2.
+
+  // console.log("PredictionInput: getStops triggered after splice: ", getStops);
+
   // Convert that array of strings to integers.
-  const a = getStops;
+  // const a = getStops;
   // A map method for Arrays, applying a function to all elements of an array.
-  const directionStopNumbers = a.map(function (x) {
+  for (var i = 1; i < getStops.length; i++) {
+    console.log(getStops[i]);
+  }
+  const directionStopNumbers = getStops.slice(1).map(function (x) {
     return parseInt(x, 10);
   });
 
-  console.log(
-    "In PredictionInput - directionStopNumbers here",
-    directionStopNumbers
-  );
+  console.log(directionStopNumbers);
+
+  // console.log(
+  //   "In PredictionInput - directionStopNumbers here",
+  //   directionStopNumbers
+  // );
   const routeDirectionStops = [];
 
   for (var q = 0; q < props.parsedStops.length; q++) {
@@ -48,29 +76,25 @@ const PredictionInput = (props) => {
         <Typeahead
           // Inbuilt props: https://github.com/ericgio/react-bootstrap-typeahead/blob/master/docs/API.md#typeahead.
           id="basic-example"
-          options={["46A"]}
-          maxVisible={2}
+          options={props.allRoutes}
           placeholder="Select a route: e.g. 46A"
-          onChange={(address) => {
-            props.setRouteSelect(address);
-          }}
-        />
-      </Form.Group>
-      <Form.Group
-        // Inbuilt props: https://react-bootstrap.github.io/components/forms/#form-group-props.
-        controlId="formRoute"
-      >
-        <Typeahead
-          // Inbuilt props: https://github.com/ericgio/react-bootstrap-typeahead/blob/master/docs/API.md#typeahead.
-          id="basic-example"
-          options={["Phoenix Park", "Dun Laoghaire"]}
-          maxVisible={2}
-          placeholder="Select a direction: e.g. Phoenix Park"
-          onChange={(address) => {
-            if (String(address) === "Dun Laoghaire") {
-              props.setDirectionSelect(1);
-            } else {
-              props.setDirectionSelect(2);
+          onChange={(route) => {
+            try {
+              for (var i = 0; i < props.allRoutes.length; i++) {
+                if (String(route) === props.allRoutes[i]) {
+                  const routeString = props.allRoutes[i];
+                  props.routeChoice({ routeString });
+                  props.setRouteSelect(routeString);
+                  props.setResponse(null);
+                  props.originNumberChoice({ id: "0" });
+                  props.setOrigin("");
+                  props.setDestination("");
+                  refUserOrigin.current.clear();
+                  refUserDestination.current.clear();
+                }
+              }
+            } catch (error) {
+              console.log("😱 Error: ", error);
             }
           }}
         />
@@ -108,8 +132,9 @@ const PredictionInput = (props) => {
           <Typeahead
             // Inbuilt props: https://github.com/ericgio/react-bootstrap-typeahead/blob/master/docs/API.md#typeahead.
             id="basic-example"
-            options={routeDirectionStops}
+            options={props.filteredStops}
             placeholder="Departing from: e.g. Stop 334, D'Olier Street"
+            ref={refUserOrigin}
             onChange={(address) => {
               try {
                 for (var i = 0; i < props.parsedStops.length; i++) {
@@ -117,9 +142,9 @@ const PredictionInput = (props) => {
                     const id = props.parsedStops[i].id;
                     const lat = props.parsedStops[i].geometry.lat;
                     const lng = props.parsedStops[i].geometry.lng;
+                    props.originNumberChoice({ id });
                     props.originChoice({ lat, lng });
                     props.panTo({ lat, lng });
-                    props.originNumberChoice({ id });
                   }
                 }
               } catch (error) {
@@ -138,14 +163,15 @@ const PredictionInput = (props) => {
             id="basic-example"
             options={routeDirectionStops}
             placeholder="Destination: e.g. Stop 2007, Stillorgan Road"
+            ref={refUserDestination}
             onChange={(s) => {
               try {
-                // console.log("button triggered");
                 for (var i = 0; i < props.parsedStops.length; i++) {
                   if (String(s) === props.parsedStops[i].description) {
                     const lat = props.parsedStops[i].geometry.lat;
                     const lng = props.parsedStops[i].geometry.lng;
                     props.panTo({ lat, lng });
+                    props.setDirectionSelect(directionIndicator);
                     setDestinationSelected(s);
                   }
                 }
