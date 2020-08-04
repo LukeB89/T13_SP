@@ -23,11 +23,14 @@ function Locate({
           // Hard coding Dublin for the time being.
           (position) => {
             panTo({
-              // lat: position.coords.latitude,
-              // lng: position.coords.longitude,
-              lat: dublinCenter.lat,
-              lng: dublinCenter.lng,
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+
+              //lat: dublinCenter.lat,
+              //lng: dublinCenter.lng,
             });
+            console.log("lat: ", position.coords.latitude);
+            console.log("lng: ", position.coords.longitude);
             setResponse(null);
           },
           () => null
