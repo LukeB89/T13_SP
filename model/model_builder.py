@@ -25,14 +25,21 @@ def clean_and_split(route):
     else:
         # imports file to DataFrame
         leave_df = pd.read_csv("../database_code/route_{}_leavetimes.csv".format(route))
+
+    # Create a feature "Minutes"
+    leave_df["MINUTES"] = pd.to_datetime(leave_df["ACTUALTIME_ARR"], unit='s').dt.minute
+
+    # Keep rows whose program number is 1
+    leave_df.drop(leave_df[leave_df['PROGRNUMBER'] != 1].index, inplace=True)
+
     # Get Dummies for whole table on specfic coulmns
-    train_data = pd.get_dummies(leave_df, columns=["STOPPOINTID", "DIRECTION", "MONTH", "HOUR", "WEATHER_MAIN", "DAYOFWEEK", "WEATHER_ID", "DAY"], drop_first=True)
+    train_data = pd.get_dummies(leave_df, columns=["DIRECTION", "MONTH", "HOUR", "MINUTES", "WEATHER_MAIN", "DAYOFWEEK", "WEATHER_ID"], drop_first=True)
     # Reset index
     train_data.reset_index(drop=True, inplace=True)
     # Save target data
-    train_trgt = train_data["ACTUALTIME_ARR"]
+    train_trgt = train_data["ACTUAL_TRIP_DURATION"]
     # Save feature data
-    train_fetr = train_data.drop(columns=["ACTUALTIME_ARR", "TRIPID","PROGRNUMBER", "PLANNEDTIME_ARR", "VEHICLEID", "PLANNEDTIME_DEP", "ACTUALTIME_DEP", "DELAY", "TIMEATSTOP", "LINEID", "PLANNED_TRIP_DURATION", "ACTUAL_TRIP_DURATION", "YEAR"])
+    train_fetr = train_data.drop(columns=["STOPPOINTID", "ACTUALTIME_ARR", "TRIPID","PROGRNUMBER", "PLANNEDTIME_ARR", "VEHICLEID", "PLANNEDTIME_DEP", "ACTUALTIME_DEP", "DELAY", "TIMEATSTOP", "LINEID", "PLANNED_TRIP_DURATION", "ACTUAL_TRIP_DURATION", "YEAR", "DAY"])
     # Clean up memory space
     del leave_df, train_data
     # Return Variables
@@ -50,6 +57,12 @@ def clean_and_split_large(route, percent):
         with open('model_log.txt', 'a') as f:
             f.writelines("{} has the shape: {}\n".format(route, leave_df.shape))
 
+    # Create a feature "Minutes"
+    leave_df["MINUTES"] = pd.to_datetime(leave_df["ACTUALTIME_ARR"], unit='s').dt.minute
+
+    # Keep rows whose program number is 1
+    leave_df.drop(leave_df[leave_df['PROGRNUMBER'] != 1].index, inplace=True)
+
     # Get list of all unique Trip IDs
     full_list = list(leave_df["TRIPID"].unique())
     # Split Trip Ids into 70:30 for Train:Test
@@ -66,13 +79,13 @@ def clean_and_split_large(route, percent):
     if train_data.shape[0] > 1000000:
         return
     # Get Dummies for whole table on specfic coulmns
-    train_data = pd.get_dummies(train_data, columns=["STOPPOINTID", "DIRECTION", "MONTH", "HOUR", "WEATHER_MAIN", "DAYOFWEEK", "WEATHER_ID", "DAY"], drop_first=True)
+    train_data = pd.get_dummies(train_data, columns=["DIRECTION", "MONTH", "HOUR", "MINUTES", "WEATHER_MAIN", "DAYOFWEEK", "WEATHER_ID"], drop_first=True)
     # Reset index
 
     # Save target data
-    train_trgt = train_data["ACTUALTIME_ARR"]
+    train_trgt = train_data["ACTUAL_TRIP_DURATION"]
     # Save feature data
-    train_fetr = train_data.drop(columns=["ACTUALTIME_ARR", "TRIPID","PROGRNUMBER", "PLANNEDTIME_ARR", "VEHICLEID", "PLANNEDTIME_DEP", "ACTUALTIME_DEP", "DELAY", "TIMEATSTOP", "LINEID", "PLANNED_TRIP_DURATION", "ACTUAL_TRIP_DURATION", "YEAR"])
+    train_fetr = train_data.drop(columns=["STOPPOINTID", "ACTUALTIME_ARR", "TRIPID","PROGRNUMBER", "PLANNEDTIME_ARR", "VEHICLEID", "PLANNEDTIME_DEP", "ACTUALTIME_DEP", "DELAY", "TIMEATSTOP", "LINEID", "PLANNED_TRIP_DURATION", "ACTUAL_TRIP_DURATION", "YEAR", "DAY"])
 
     # Return Variables
     return train_fetr, train_trgt
@@ -94,7 +107,7 @@ def main():
             fetr_df = pd.DataFrame(columns=["Route", "Features"])
         # Open a log and write to it
         with open('model_log.txt', 'w') as f:
-                f.write("Starting Model Building\n\n")
+            f.write("Starting Model Building\n\n")
         # Run function to get list of routes
         routes = get_routes()
         # Go through each route
@@ -111,7 +124,7 @@ def main():
                     # If route does not have file this will error and is caught below
                     train_fetr, train_trgt = clean_and_split(route)
                     # Create model for current route
-                    randforest_model = RandomForestRegressor(n_estimators=16, max_features='auto', max_depth=18,
+                    randforest_model = RandomForestRegressor(n_estimators=64, max_features='auto', max_depth=16,
                                                              oob_score=True, random_state=1).fit(train_fetr, train_trgt)
                     # Save Model with current Route name
                     with open('models/route_{}_RF_model.pkl'.format(route), 'wb') as handle:
