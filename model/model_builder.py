@@ -80,7 +80,6 @@ def clean_and_split_large(route, percent):
         return
     # Get Dummies for whole table on specfic coulmns
     train_data = pd.get_dummies(train_data, columns=["DIRECTION", "MONTH", "HOUR", "MINUTES", "WEATHER_MAIN", "DAYOFWEEK", "WEATHER_ID"], drop_first=True)
-    # Reset index
 
     # Save target data
     train_trgt = train_data["ACTUAL_TRIP_DURATION"]
