@@ -11,7 +11,7 @@ const dublinCenter = require("../data/DublinCenter.json");
 // adjust the map to the users location.
 function Locate({
   // Receiving props - Function defined in App.js.
-  panTo,
+  panToGeoMarker,
   // Receiving props - Variable defined in App.js.
   setResponse,
 }) {
@@ -22,7 +22,7 @@ function Locate({
         navigator.geolocation.getCurrentPosition(
           // Hard coding Dublin for the time being.
           (position) => {
-            panTo({
+            panToGeoMarker({
               // lat: position.coords.latitude,
               // lng: position.coords.longitude,
               lat: dublinCenter.lat,

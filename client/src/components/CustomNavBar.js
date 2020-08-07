@@ -42,55 +42,58 @@ function CustomNavbar({
         />{" "}
         Dublin Bus
       </Navbar.Brand>
-      <Nav
-        // Inbuilt props: https://react-bootstrap.github.io/components/navs/#nav-props.
-        className="mr-auto"
-      ></Nav>
+      <Navbar.Toggle aria-controls="basic-navbar-nav" />
+      <Navbar.Collapse id="basic-navbar-nav">
+        <Nav
+          // Inbuilt props: https://react-bootstrap.github.io/components/navs/#nav-props.
+          className="mr-auto"
+        ></Nav>
 
-      <Form
-        // CSS
-        style={{ paddingRight: "1vw" }}
-      >
-        <Form.Group
-          // Inbuilt props: https://react-bootstrap.github.io/components/forms/#form-group-props.
-          controlId="formRealTime"
+        <Form
           // CSS
-          style={{ paddingTop: "1.6vh", width: "15vw" }}
+          style={{ paddingRight: "1vw" }}
         >
-          <StopSearch
-            // Passing in props - Functions defined in App.js.
-            panTo={panTo}
-            stopChoice={stopChoice}
-            // ?? This hasn't been received from above. Does it work?
-            setMarkerMap={setMarkerMap}
-            // Passing in props - Stop data defined in App.js.
-            parsedStops={parsedStops}
-            stopDescriptions={stopDescriptions}
-          />
-        </Form.Group>
-      </Form>
-      <Form
-        // CSS
-        style={{ paddingRight: "1vw" }}
-      >
-        <Form.Check
-          // Inbuilt props: https://react-bootstrap.github.io/components/forms/#form-check-props.
-          type="switch"
-          id="custom-switch"
-          label="Tourist Mode"
+          <Form.Group
+            // Inbuilt props: https://react-bootstrap.github.io/components/forms/#form-group-props.
+            controlId="formRealTime"
+            // CSS
+            style={{ paddingTop: "1.6vh", width: "15vw" }}
+          >
+            <StopSearch
+              // Passing in props - Functions defined in App.js.
+              panTo={panTo}
+              stopChoice={stopChoice}
+              // ?? This hasn't been received from above. Does it work?
+              setMarkerMap={setMarkerMap}
+              // Passing in props - Stop data defined in App.js.
+              parsedStops={parsedStops}
+              stopDescriptions={stopDescriptions}
+            />
+          </Form.Group>
+        </Form>
+        <Form
           // CSS
-          style={{ color: "white" }}
+          style={{ paddingRight: "1vw" }}
+        >
+          <Form.Check
+            // Inbuilt props: https://react-bootstrap.github.io/components/forms/#form-check-props.
+            type="switch"
+            id="custom-switch"
+            label="Tourist Mode"
+            // CSS
+            style={{ color: "white" }}
+          />
+        </Form>
+        <Weather
+          // Inbuilt props: https://github.com/lopogo59/simple-react-weather#readme.
+          unit="C"
+          city="Dublin, IE"
+          // ?? This API key will need to be hidden.
+          appid="0af2c4378e1bfb001a3e457cc32410be"
+          // CSS
+          style={{ paddingTop: "1.8vh" }}
         />
-      </Form>
-      <Weather
-        // Inbuilt props: https://github.com/lopogo59/simple-react-weather#readme.
-        unit="C"
-        city="Dublin, IE"
-        // ?? This API key will need to be hidden.
-        appid="0af2c4378e1bfb001a3e457cc32410be"
-        // CSS
-        style={{ paddingTop: "1.8vh" }}
-      />
+      </Navbar.Collapse>
     </Navbar>
   );
 }

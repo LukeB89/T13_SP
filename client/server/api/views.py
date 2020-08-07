@@ -1,15 +1,22 @@
 import requests
 import pandas as pd
-import numpy as np
-import pickle
-import sklearn
+import time
+import warnings
 import json
 import os.path
+from configparser import ConfigParser
 from .models import ForecastWeather
+from .utils import get_prediction
 from django.http import JsonResponse
-import warnings
 
 warnings.filterwarnings('ignore')
+
+
+# read DataBase info from the config file
+config = ConfigParser()
+config.read("../../config.ini")
+options = config["DataBase"]
+weather_api = options["weather_api"]
 
 
 def rtpi_api(request):
@@ -42,132 +49,111 @@ def route_stops(request):
     determines in which direction the user is going."""
     route = request.GET.get('chosenRoute')
     stop = request.GET.get('chosenStop')
-    print("Django function route_stops, route here", route)
+    print("Django function route_stops, route here", route, type(stop))
     print("Django function route_stops, stop here", stop)
-    print(type(stop))
-    # insert a check for the existence of a file here.
-    # if not os.path.isfile("./static/percentile_tables/route_" + route + "_dir_2_prcnt_data.csv") \
-    #         and os.path.isfile("./static/percentile_tables/route_" + route + "_dir_1_prcnt_data.csv"):
-    #     df1 = pd.read_csv("./static/percentile_tables/route_" + route + "_dir_1_prcnt_data.csv"
-    #                       , keep_default_na=True,
-    #                       sep=',\s+', delimiter=',', skipinitialspace=True)
-    #     requested_route_stops = list(df1.columns)[df1.columns.get_loc(stop) + 1:]
-    #     requested_route_stops.insert(0, "1")
-    #     return JsonResponse({'route_stops_response': requested_route_stops})
-    # else:
-    df1 = pd.read_csv("./static/percentile_tables/route_" + route + "_dir_1_prcnt_data.csv"
-                      , keep_default_na=True,
-                      sep=',\s+', delimiter=',', skipinitialspace=True)
-    df2 = pd.read_csv("./static/percentile_tables/route_" + route + "_dir_2_prcnt_data.csv"
-                      , keep_default_na=True,
-                      sep=',\s+', delimiter=',', skipinitialspace=True)
-    if stop in df1.columns and stop in df2.columns:
-        if df1.columns.get_loc(stop) < df2.columns.get_loc(stop):
-            requested_route_stops = list(df1.columns)[df1.columns.get_loc(stop) + 1:]
-            requested_route_stops.insert(0, "1")
-            return JsonResponse({'route_stops_response': requested_route_stops})
-        else:
-            requested_route_stops = list(df2.columns)[df2.columns.get_loc(stop) + 1:]
-            requested_route_stops.insert(0, "2")
-            return JsonResponse({'route_stops_response': requested_route_stops})
-    elif stop not in df1.columns and stop in df2.columns:
-        requested_route_stops = list(df2.columns)[df2.columns.get_loc(stop) + 1:]
-        requested_route_stops.insert(0, "2")
-        return JsonResponse({'route_stops_response': requested_route_stops})
-    else:
+    # should there no file for the selected route.
+    if not os.path.isfile("./static/percentile_tables/route_" + route + "_dir_1_prcnt_data.csv") \
+            and not os.path.isfile("./static/percentile_tables/route_" + route + "_dir_2_prcnt_data.csv"):
+        return JsonResponse({'route_stops_response': [1, "We're sorry, no data exists for this route."]})
+    # should there only be a file for direction 1 of the selected route
+    elif not os.path.isfile("./static/percentile_tables/route_" + route + "_dir_2_prcnt_data.csv") \
+            and os.path.isfile("./static/percentile_tables/route_" + route + "_dir_1_prcnt_data.csv"):
+        df1 = pd.read_csv("./static/percentile_tables/route_" + route + "_dir_1_prcnt_data.csv"
+                          , keep_default_na=True,
+                          sep=',\s+', delimiter=',', skipinitialspace=True)
+        # remove any columns with more than 80% missing data
+        df1 = df1[df1.columns[df1.isnull().mean() < 0.8]]
         requested_route_stops = list(df1.columns)[df1.columns.get_loc(stop) + 1:]
         requested_route_stops.insert(0, "1")
         return JsonResponse({'route_stops_response': requested_route_stops})
+    # should there only be a file for direction 2 of the selected route
+    elif not os.path.isfile("./static/percentile_tables/route_" + route + "_dir_1_prcnt_data.csv") \
+            and os.path.isfile("./static/percentile_tables/route_" + route + "_dir_2_prcnt_data.csv"):
+        df2 = pd.read_csv("./static/percentile_tables/route_" + route + "_dir_2_prcnt_data.csv"
+                          , keep_default_na=True,
+                          sep=',\s+', delimiter=',', skipinitialspace=True)
+        # remove any columns with more than 80% missing data
+        df2 = df2[df2.columns[df2.isnull().mean() < 0.8]]
+        requested_route_stops = list(df2.columns)[df2.columns.get_loc(stop) + 1:]
+        requested_route_stops.insert(0, "1")
+        return JsonResponse({'route_stops_response': requested_route_stops})
+    # where both files exist
+    else:
+        df1 = pd.read_csv("./static/percentile_tables/route_" + route + "_dir_1_prcnt_data.csv"
+                          , keep_default_na=True,
+                          sep=',\s+', delimiter=',', skipinitialspace=True)
+        df1 = df1[df1.columns[df1.isnull().mean() < 0.8]]
+        df2 = pd.read_csv("./static/percentile_tables/route_" + route + "_dir_2_prcnt_data.csv"
+                          , keep_default_na=True,
+                          sep=',\s+', delimiter=',', skipinitialspace=True)
+        df2 = df2[df2.columns[df2.isnull().mean() < 0.8]]
+        if stop in df1.columns and stop in df2.columns:
+            if df1.columns.get_loc(stop) < df2.columns.get_loc(stop):
+                requested_route_stops = list(df1.columns)[df1.columns.get_loc(stop) + 1:]
+                requested_route_stops.insert(0, "1")
+                return JsonResponse({'route_stops_response': requested_route_stops})
+            else:
+                requested_route_stops = list(df2.columns)[df2.columns.get_loc(stop) + 1:]
+                requested_route_stops.insert(0, "2")
+                return JsonResponse({'route_stops_response': requested_route_stops})
+        elif stop not in df1.columns and stop in df2.columns:
+            requested_route_stops = list(df2.columns)[df2.columns.get_loc(stop) + 1:]
+            requested_route_stops.insert(0, "2")
+            return JsonResponse({'route_stops_response': requested_route_stops})
+        else:
+            requested_route_stops = list(df1.columns)[df1.columns.get_loc(stop) + 1:]
+            requested_route_stops.insert(0, "1")
+            return JsonResponse({'route_stops_response': requested_route_stops})
 
 
-def model_result(request):
+def model_result(request, weather_api=weather_api):
     """ Returns to the frontend the predicted time for the total length of the
     selected route going in the selected direction.
 
     Receives via GET request the users desired hour, day and month of travel. """
     route = request.GET.get('chosenRoute')
     direction = request.GET.get('chosenDirection')
-    print("Django function model_result, route here", route)
-    print("Django function model_result, direction here", direction)
-    # Load the pickle file
-    with open("./static/pickle/RANDOM_FOREST_2018_" + route + "_" + direction + ".pkl", 'rb') as pickle_file:
-        rfr_ = pickle.load(pickle_file)
     hour = int(request.GET.get('chosenTime'))
+    minute = int(request.GET.get('chosenMinute'))
     day = request.GET.get('chosenDay')
     month = request.GET.get('chosenMonth')
+    print("Django function model_result, route here", route)
+    print("Django function model_result, direction here", direction)
     print("Django function model_result, hour here", hour)
+    print("Django function model_result, minute here", minute)
     print("Django function model_result, day here", day)
     print("Django function model_result, month here", month)
-    # Dataframes for the hours of the day
-    df_times = pd.DataFrame({hour: [hour]})
-    # Create dummy columns for all of the hours.
-    df_times['5'] = np.where((df_times[hour] == 5), 1, 0)
-    df_times['6'] = np.where((df_times[hour] == 6), 1, 0)
-    df_times['7'] = np.where((df_times[hour] == 7), 1, 0)
-    df_times['8'] = np.where((df_times[hour] == 8), 1, 0)
-    df_times['9'] = np.where((df_times[hour] == 9), 1, 0)
-    df_times['10'] = np.where((df_times[hour] == 10), 1, 0)
-    df_times['11'] = np.where((df_times[hour] == 11), 1, 0)
-    df_times['12'] = np.where((df_times[hour] == 12), 1, 0)
-    df_times['13'] = np.where((df_times[hour] == 13), 1, 0)
-    df_times['14'] = np.where((df_times[hour] == 14), 1, 0)
-    df_times['15'] = np.where((df_times[hour] == 15), 1, 0)
-    df_times['16'] = np.where((df_times[hour] == 16), 1, 0)
-    df_times['17'] = np.where((df_times[hour] == 17), 1, 0)
-    df_times['18'] = np.where((df_times[hour] == 18), 1, 0)
-    df_times['19'] = np.where((df_times[hour] == 19), 1, 0)
-    df_times['20'] = np.where((df_times[hour] == 20), 1, 0)
-    df_times['21'] = np.where((df_times[hour] == 21), 1, 0)
-    df_times['22'] = np.where((df_times[hour] == 22), 1, 0)
-    df_times['23'] = np.where((df_times[hour] == 23), 1, 0)
-    df_times['24'] = np.where((df_times[hour] == 24), 1, 0)
-    df_times = df_times.drop(df_times.columns[0], axis=1)
-    # Dataframe for the days of the week
-    df_days = pd.DataFrame({day: [day]})
-    # Create the dummy columns for all of the days.
-    df_days['Friday'] = np.where((df_days[day] == "Fri"), 1, 0)
-    df_days['Monday'] = np.where((df_days[day] == "Mon"), 1, 0)
-    df_days['Saturday'] = np.where((df_days[day] == "Sat"), 1, 0)
-    df_days['Sunday'] = np.where((df_days[day] == "Sun"), 1, 0)
-    df_days['Thursday'] = np.where((df_days[day] == "Thu"), 1, 0)
-    df_days['Tuesday'] = np.where((df_days[day] == "Tue"), 1, 0)
-    df_days['Wednesday'] = np.where((df_days[day] == "Wed"), 1, 0)
-    df_days = df_days.drop(df_days.columns[0], axis=1)
-    # Dataframes for the months
-    df_month = pd.DataFrame({month: [month]})
-    df_alt_month = pd.DataFrame()
-    # Create the dummy columns for all of the months.
-    df_alt_month['April'] = np.where((df_month[month] == "Apr"), 1, 0)
-    df_alt_month['August'] = np.where((df_month[month] == "Aug"), 1, 0)
-    df_alt_month['December'] = np.where((df_month[month] == "Dec"), 1, 0)
-    df_alt_month['February'] = np.where((df_month[month] == "Feb"), 1, 0)
-    df_alt_month['January'] = np.where((df_month[month] == "Jan"), 1, 0)
-    df_alt_month['July'] = np.where((df_month[month] == "Jul"), 1, 0)
-    df_alt_month['June'] = np.where((df_month[month] == "Jun"), 1, 0)
-    df_alt_month['March'] = np.where((df_month[month] == "Mar"), 1, 0)
-    df_alt_month['May'] = np.where((df_month[month] == "May"), 1, 0)
-    df_alt_month['November'] = np.where((df_month[month] == "Nov"), 1, 0)
-    df_alt_month['October'] = np.where((df_month[month] == "Oct"), 1, 0)
-    df_alt_month['September'] = np.where((df_month[month] == "Sep"), 1, 0)
-    # Call to the weather api for the current weather conditions.
-    # TODO - We must instead include a call to the weather database.
-    WEATHER_URI = "http://api.openweathermap.org/data/2.5/weather"
-    weather_api = "0af2c4378e1bfb001a3e457cc32410be"
-    response = requests.get(WEATHER_URI, params={"id": 2964574, "appid": weather_api})
-    # Parse the data
+    DAYOFWEEK = time.strptime(day, "%a").tm_wday
+    MONTH = time.strptime(month,'%b').tm_mon
+    # Call to the weather api for the current weather conditions
+    WEATHER_URL_2 = "https://api.openweathermap.org/data/2.5/onecall?lat=53.349804&lon=-6.30131&exclude=current," \
+                    "minutely,hourly "
+    weather_api = weather_api
+    response = requests.get(WEATHER_URL_2, params={"id": 2964574, "appid": weather_api})
+    kelvin = 273.15
+    # parse the data
     data = response.text
-    parsed = json.loads(data)
-    # Create dataframes from the weather.
-    temp_df = pd.DataFrame(parsed['main'], index=[0])
-    temp_df.temp[0] = temp_df.temp[0] - 273.15  # kelvin
-    cloud_df = pd.DataFrame(parsed['clouds'], index=[0])
-    cloud_df = cloud_df.rename(columns={'all': 'clouds_all'})
-    # Dataframe to hold correct weather input for model
-    df_weather = pd.DataFrame(
-        {'temp': temp_df['temp'], 'humidity': temp_df['humidity'], 'clouds_all': cloud_df['clouds_all']})
-    # Final dataframe with the shape expected by the model.
-    dfX = pd.concat([df_times, df_days, df_alt_month, df_weather], axis=1)
-    return JsonResponse({'model_response': (int(round(rfr_.predict(dfX)[0])))})
+    onecall_parsed = json.loads(data)
+    for i in range(len(onecall_parsed['daily']) - 1):
+        if pd.Timestamp(onecall_parsed['daily'][i]['dt'], unit='s').dayofweek == DAYOFWEEK:
+            TEMP = onecall_parsed['daily'][i]['temp']['day'] - kelvin
+            FEELS_LIKE = onecall_parsed['daily'][i]['feels_like']['day'] - kelvin
+            TEMP_MIN = onecall_parsed['daily'][i]['temp']['min'] - kelvin
+            TEMP_MAX = onecall_parsed['daily'][i]['temp']['max'] - kelvin
+            PRESSURE = onecall_parsed['daily'][i]['pressure']
+            HUMIDITY = onecall_parsed['daily'][i]['humidity']
+            WIND_SPEED = onecall_parsed['daily'][i]['wind_speed']
+            WIND_DEG = onecall_parsed['daily'][i]['wind_deg']
+            CLOUDS_ALL = onecall_parsed['daily'][i]['clouds']
+            WEATHER_MAIN = onecall_parsed['daily'][i]['weather'][0]['main']
+            WEATHER_ID = onecall_parsed['daily'][i]['weather'][0]['id']
+            result = get_prediction(route, TEMP=TEMP, FEELS_LIKE=FEELS_LIKE, TEMP_MIN=TEMP_MIN, TEMP_MAX=TEMP_MAX,
+                            PRESSURE=PRESSURE, HUMIDITY=HUMIDITY, WIND_SPEED=WIND_SPEED, WIND_DEG=WIND_DEG,
+                            CLOUDS_ALL=CLOUDS_ALL, MONTH=MONTH, MINUETS=minute, WEATHER_MAIN=WEATHER_MAIN,
+                            DAYOFWEEK=DAYOFWEEK, WEATHER_ID=WEATHER_ID, DIRECTION=direction)
+            result = int(result/60)
+            print(result)
+            return JsonResponse({'model_response': result})
 
 
 def percentile_result(request):
@@ -186,8 +172,14 @@ def percentile_result(request):
     day = request.GET.get('chosenDay')
     origin = request.GET.get('origin')
     destination = request.GET.get('destination')
+    print("Django function percentile_result, hour here", hour, type(hour))
+    print("Django function percentile_result, day here", day, type(day))
+    print("Django function percentile_result, origin here", origin, type(origin))
+    print("Django function percentile_result, destination here", destination, type(destination))
     model_response = int(request.GET.get('modelResponse'))
     rowx = df[(df["HOUR"] == hour) & (df["DAYOFWEEK"] == day)]
+    rowx = rowx.iloc[0]              # TODO - not.
+    print(rowx)
     prct = int(rowx[destination]) - int(rowx[origin])
     prct /= 100
     journey_time = model_response * prct

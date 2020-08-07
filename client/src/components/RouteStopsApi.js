@@ -10,26 +10,17 @@ export default function RouteStopsApi(routeSelect, originNumber) {
   const [routeStopsResponse, setRouteStopsResponse] = useState({
     route_stops_response: [],
   });
-  console.log("originNumber coming into RouteStopsApi", originNumber);
-
-  // // React Hook React.useEffect has a missing dependency: 'routeSelect'. Either include it or remove the dependency array
-  // // React Hook React.useEffect has a complex expression in the dependency array. Extract it to a separate variable so it can be statically checked
-  // The variable below has been created to avoid the two errors above.
-  // console.log(
-  //   "RouteStopsApi - routeSelectMissingDependencyFix triggered",
-  //   routeSelectMissingDependencyFix,
-  //   directionSelect
-  // );
+  // console.log("originNumber coming into RouteStopsApi", originNumber);
 
   // The Effect Hook used to perform side effects in this component.
   // https://reactjs.org/docs/hooks-effect.html.
   React.useEffect(
     () => {
-      if (String(routeSelect) === "" && originNumber === 0) {
+      if (String(routeSelect) === "" || originNumber === 0) {
         // console.log("RouteStopsApi - undefined - got rendered");
         // initial render should be nothing.
         return undefined;
-      } else if (originNumber === NaN) {
+      } else if (originNumber === isNaN) {
         return undefined;
       } else {
         console.log(
@@ -41,7 +32,7 @@ export default function RouteStopsApi(routeSelect, originNumber) {
           setRouteStopsResponse({
             route_stops_response: [],
           });
-        } else if (originNumber === NaN) {
+        } else if (originNumber === isNaN) {
           setRouteStopsResponse({
             route_stops_response: [],
           });
