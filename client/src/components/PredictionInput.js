@@ -157,6 +157,8 @@ const PredictionInput = (props) => {
                     const id = props.parsedStops[i].id;
                     const lat = props.parsedStops[i].geometry.lat;
                     const lng = props.parsedStops[i].geometry.lng;
+                    props.destinationNumberChoice({ id: "0" });
+                    refUserDestination.current.clear();
                     props.setResponseValidator(false);
                     props.originNumberChoice({ id });
                     props.originChoice({ lat, lng });

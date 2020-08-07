@@ -12,11 +12,9 @@ import {
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Container from "react-bootstrap/Container";
-// import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
-// import Loader from "react-loader-spinner";
+import Spinner from "react-bootstrap/Spinner";
 // Importing self-developed components.
 import CustomNavBar from "./components/CustomNavBar";
-import FilterRoute from "./components/FilterRoute";
 import StopSearch from "./components/StopSearch";
 import Locate from "./components/Locate";
 import PredictionInput from "./components/PredictionInput";
@@ -26,8 +24,6 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "@reach/combobox/styles.css";
 // Importing Google Maps Api Key.
 import googleMapApiKey from "./config";
-// also available as `default`
-var Loader = require("react-loaders").Loader;
 // Defining libraries for Google Places
 const libraries = ["places"];
 // Importing the Dublin Bus API stops data
@@ -36,15 +32,8 @@ const data = require("./data/DublinBusStops.json");
 const dublinCenter = require("./data/DublinCenter.json");
 // Importing custom styles to customize the style of Google Map...
 // important for including and excluding certain place markers etc.
-const styles = require("./data/GoogleMapStyles.json");
-// Defined custom styles and location for Google Map.
-const mapOptions = {
-  styles: styles,
-  disableDefaultUI: true,
-  zoomControl: true,
-  maxZoom: 17,
-  minZoom: 11,
-};
+const normalModeBasic = require("./data/NormalModeBasic");
+
 const mapContainerStyle = {
   height: "93vh",
 };
@@ -110,6 +99,13 @@ export default function App() {
     libraries,
   });
   const center = dublinCenter;
+  const [mapOptions, setMapOptions] = useState({
+    styles: normalModeBasic,
+    disableDefaultUI: true,
+    zoomControl: true,
+    maxZoom: 17,
+    minZoom: 11,
+  });
   // eslint-disable-next-line
   const [zoom, setZoom] = useState(11); // removing unwanted warning.
   // The general things we need to track in state:
@@ -133,6 +129,7 @@ export default function App() {
   const [responseValidator, setResponseValidator] = useState(false);
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
+  const [distance, setDistance] = useState(null);
   // This is being used to track in state which set of markers is displayed. (Clusters or Route Markers)
   const [markerSelection, setMarkerSelection] = useState(true);
   // The things for selected time (Hour, Day, Month) we need to track in state.
@@ -142,7 +139,6 @@ export default function App() {
   // this time without having to select the time.
   const initialTime = selectedTime.toTimeString().substring(0, 2);
   const initialMinute = selectedTime.toTimeString().substring(3, 5);
-  console.log(selectedTime.toTimeString().substring(3, 5));
   const [initialDay, initialMonth] = selectedTime.toDateString().split(" ");
   // An array containing time data for model input.
   const [timeDayMonth, setTimeDayMonth] = useState([
@@ -152,11 +148,15 @@ export default function App() {
     initialMonth,
   ]);
   // Track state of user selected routes and directions.
-  const [routeSelect, setRouteSelect] = React.useState("");
-  const [directionSelect, setDirectionSelect] = React.useState(undefined);
+  const [routeSelect, setRouteSelect] = useState("");
+  const [directionSelect, setDirectionSelect] = useState(undefined);
   // Track state of filtered bus stops.
-  const [filteredStops, setFilteredStops] = React.useState([]);
-  const [filteredStopsLatLng, setFilteredStopsLatLng] = React.useState([]);
+  const [filteredStops, setFilteredStops] = useState([]);
+  const [filteredStopsLatLng, setFilteredStopsLatLng] = useState([]);
+  // A flag to track whether Tourist Mode has been activated.
+  const [touristModeFlag, setTouristModeFlag] = useState(false);
+  // A flag to track whether Night Mode has been activated.
+  const [nightModeFlag, setNightModeFlag] = useState(false);
 
   const mapRef = React.useRef();
   const onMapLoad = React.useCallback((map) => {
@@ -217,8 +217,6 @@ export default function App() {
   const routeChoice = (route) => {
     setRouteString(() => route.routeString);
   };
-
-  const [distance, setDistance] = React.useState(null);
 
   // For generating a directions route on the map.
   const directionsCallback = React.useCallback(
@@ -335,23 +333,14 @@ export default function App() {
     setFilteredStopsLatLng(() => filteredMarkers);
   };
 
-  // Orient the map to the selected route.
-  // Will need to have passed in to it an array of stop locations.
-  const panTwo = React.useCallback(
-    // For some reason there is delay in this function receiving filteredStopsLatLng.
-    // You had this problem before, with the time. How the hell did you fix that?!
-    () => {
-      // console.log(newBounds, "here is geometry in panTwo in App.js");
-      // mapRef.current.fitBounds(newBounds);
-      // mapRef.current.setZoom(12);
-      // Resetting the drawn route anytime this functions is called.
-      setDestination("");
-    },
-    []
-  );
-
   if (loadError) return "Error";
-  if (!isLoaded) return <Loader type="line-scale" active />;
+  // if (!isLoaded) return <Loader type="line-scale" active />;+
+  if (!isLoaded)
+    return (
+      <Spinner animation="border" role="status">
+        <span className="sr-only">Loading...</span>
+      </Spinner>
+    );
 
   return (
     <Container fluid>
@@ -359,17 +348,22 @@ export default function App() {
         <Col sm={12}>
           <CustomNavBar
             // Passing in props - Custom built components.
-            FilterRoute={FilterRoute}
             StopSearch={StopSearch}
             // Passing in props - Functions defined above.
             panTo={panTo}
             stopChoice={stopChoice}
             routeChoice={routeChoice}
-            panTwo={panTwo}
             // Passing in props - Stop data defined above.
             parsedStops={parsedStops}
             stopDescriptions={stopDescriptions}
             allRoutes={allRoutes}
+            // Passing in props - touristModeFlag defined above
+            touristModeFlag={touristModeFlag}
+            setTouristModeFlag={setTouristModeFlag}
+            nightModeFlag={nightModeFlag}
+            setNightModeFlag={setNightModeFlag}
+            setMapOptions={setMapOptions}
+            normalModeBasic={normalModeBasic}
           />
         </Col>
       </Row>
@@ -410,6 +404,7 @@ export default function App() {
               myStops={myStops}
               setFilteredStops={setFilteredStops}
             />
+
             {infoOpen && selectedPlace && (
               <InfoWindow
                 // Inbuilt props: https://react-google-maps-api-docs.netlify.app/#infowindow.
@@ -444,7 +439,6 @@ export default function App() {
               />
             ))}
             {/* Markers dropped when stop has been chosen. */}
-
             {stopMarkers.map((marker) => (
               <Marker
                 // Inbuilt props: https://react-google-maps-api-docs.netlify.app/#marker.
@@ -511,7 +505,6 @@ export default function App() {
           <PredictionInput
             // Passing in props - Functions defined above.
             panTo={panTo}
-            panTwo={panTwo}
             originChoice={originChoice}
             destinationChoice={destinationChoice}
             originNumberChoice={originNumberChoice}

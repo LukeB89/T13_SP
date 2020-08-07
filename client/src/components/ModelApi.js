@@ -1,5 +1,6 @@
 // Importing outside developed components.
 import React, { useState } from "react";
+import ListGroup from "react-bootstrap/ListGroup";
 // Promise based HTTP client - https://github.com/axios/axios.
 const axios = require("axios");
 
@@ -60,7 +61,7 @@ export default function ModelApi(props) {
       }
     }
   }
-  console.log(infoArray);
+  // console.log(infoArray);
   // The Effect Hook used to perform side effects in this component.
   // https://reactjs.org/docs/hooks-effect.html.
   React.useEffect(
@@ -70,10 +71,10 @@ export default function ModelApi(props) {
         props.directionSelect === undefined
       ) {
         // initial render should be nothing.
-        console.log("ModelApi - model_result (a) has been triggered");
-        setModelResponse({
-          model_response: "",
-        });
+        // console.log("ModelApi - model_result (a) has been triggered");
+        // setModelResponse({
+        //   model_response: "",
+        // });
         return undefined;
       } else {
         console.log(
@@ -123,7 +124,7 @@ export default function ModelApi(props) {
         props.destinationNumber === 0 ||
         props.originNumber === 0
       ) {
-        console.log("ModelApi - percentile_result (a) has been triggered");
+        // console.log("ModelApi - percentile_result (a) has been triggered");
         // initial render should be nothing.
         setMessage({
           message: "",
@@ -145,6 +146,7 @@ export default function ModelApi(props) {
               chosenDirection: props.directionSelect,
               chosenTime: props.timeDayMonth[0],
               chosenDay: props.timeDayMonth[2],
+              chosenMonth: props.timeDayMonth[3],
               origin: props.originNumber,
               destination: props.destinationNumber,
               modelResponse: modelResponse.model_response,
@@ -163,6 +165,15 @@ export default function ModelApi(props) {
                   "This journey is estimated to take " +
                   percentileResponse.percentile_response +
                   " minute.",
+              });
+            } else if (
+              typeof percentileResponse.percentile_response === "string"
+            ) {
+              setMessage({
+                message: String(percentileResponse.percentile_response),
+                distance: infoArray[0],
+                instructions: infoArray[1],
+                num_stops: infoArray[3],
               });
             } else {
               setMessage({
@@ -203,12 +214,11 @@ export default function ModelApi(props) {
   );
 
   return (
-    <div>
-      <p>{message.message}</p>
-      <p>{message.instructions}</p>
-      <p>{message.distance}</p>
-      <p>{message.num_stops}</p>
-      {/* <p>{directionsResponse.directionsResponseMessage}</p> */}
-    </div>
+    <ListGroup variant="flush">
+      <ListGroup.Item>{message.message}</ListGroup.Item>
+      <ListGroup.Item>{message.instructions}</ListGroup.Item>
+      <ListGroup.Item>{message.distance}</ListGroup.Item>
+      <ListGroup.Item>{message.num_stops}</ListGroup.Item>
+    </ListGroup>
   );
 }

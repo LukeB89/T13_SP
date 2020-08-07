@@ -1,13 +1,13 @@
 import requests
-import pandas as pd
 import time
 import warnings
 import json
 import os.path
+import pandas as pd
 from configparser import ConfigParser
-from .models import ForecastWeather
-from .utils import get_prediction
 from django.http import JsonResponse
+from .utils import get_prediction
+
 
 warnings.filterwarnings('ignore')
 
@@ -31,14 +31,6 @@ def rtpi_api(request):
     results_dict = full_dict['results']
     real_time_array.append(results_dict)
     return JsonResponse({'results': results_dict})
-
-
-def weather_test(request):
-    one_line = ForecastWeather.rows
-    array = []
-    for rows in one_line:
-        array.append(rows)
-    return JsonResponse({'weather_response': array})
 
 
 def route_stops(request):
@@ -167,20 +159,30 @@ def percentile_result(request):
     print("Django function percentile_result, direction here", direction)
     df = pd.read_csv("./static/percentile_tables/route_" + route + "_dir_" + direction + "_prcnt_data.csv",
                      keep_default_na=True, sep=',\s+', delimiter=',', skipinitialspace=True)
-    df["DAYOFWEEK"].replace({5: "Sat", 6: "Sun", 0: "Mon", 1: "Tue", 2: "Wed", 3: "Thu", 4: "Fri"}, inplace=True)
     hour = int(request.GET.get('chosenTime'))
-    day = request.GET.get('chosenDay')
+    day_string = request.GET.get('chosenDay')
+    month_string = request.GET.get('chosenMonth')
     origin = request.GET.get('origin')
     destination = request.GET.get('destination')
+    model_response = int(request.GET.get('modelResponse'))
     print("Django function percentile_result, hour here", hour, type(hour))
-    print("Django function percentile_result, day here", day, type(day))
+    print("Django function percentile_result, day here", day_string, type(day_string))
+    print("Django function percentile_result, month here", month_string, type(month_string))
     print("Django function percentile_result, origin here", origin, type(origin))
     print("Django function percentile_result, destination here", destination, type(destination))
-    model_response = int(request.GET.get('modelResponse'))
-    rowx = df[(df["HOUR"] == hour) & (df["DAYOFWEEK"] == day)]
-    rowx = rowx.iloc[0]              # TODO - not.
-    print(rowx)
-    prct = int(rowx[destination]) - int(rowx[origin])
-    prct /= 100
-    journey_time = model_response * prct
-    return JsonResponse({'percentile_response': (int(round(journey_time)))})
+    print("Django function percentile_result, model_response here", model_response, type(model_response))
+    day = time.strptime(day_string, "%a").tm_wday
+    month = time.strptime(month_string, '%b').tm_mon
+    rowx = df[(df["HOUR"] == hour) & (df["DAYOFWEEK"] == day) & (df["MONTH"] == month)]
+    print("This is the dataframe", rowx)
+    if rowx.empty:
+        print("Empty dataframe triggered")
+        return JsonResponse({'percentile_response': "No modelling data for this journey exists."})
+    elif pd.isna(rowx.iloc[0][destination]):
+        print("NaN values triggered")
+        return JsonResponse({'percentile_response': "No modelling data for this journey exists."})
+    else:
+        prct = int(rowx[destination]) - int(rowx[origin])
+        prct /= 100
+        journey_time = model_response * prct
+        return JsonResponse({'percentile_response': (int(round(journey_time)))})
