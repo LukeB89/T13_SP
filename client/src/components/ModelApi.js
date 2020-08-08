@@ -1,16 +1,67 @@
 // Importing outside developed components.
 import React, { useState } from "react";
+import ListGroup from "react-bootstrap/ListGroup";
 // Promise based HTTP client - https://github.com/axios/axios.
 const axios = require("axios");
 
 export default function ModelApi(props) {
   // The responses from the backend we need to track in state:
-  const [message, setMessage] = useState({ message: "" });
+  const [message, setMessage] = useState({
+    message: "",
+    distance: "",
+    instructions: "",
+    num_stops: "",
+  });
   const [modelResponse, setModelResponse] = useState({ model_response: "" });
   // eslint-disable-next-line
   const [percentileResponse, setPercentileResponse] = useState();
   // console.log("ModelApi - routeSelect here: ", props.routeSelect);
   // console.log("Here is directionSelect in ModelApi", props.directionSelect);
+  const infoArray = [];
+  if (props.distance !== null) {
+    if (props.distance.selectedRouteArray[0] !== undefined) {
+      for (var i = 0; i < props.distance.selectedRouteArray.length; i++) {
+        for (
+          var j = 0;
+          j < props.distance.selectedRouteArray[i].legs.length;
+          j++
+        ) {
+          for (
+            var k = 0;
+            k < props.distance.selectedRouteArray[i].legs[j].steps.length;
+            k++
+          ) {
+            if (
+              String(
+                props.distance.selectedRouteArray[i].legs[j].steps[k]
+                  .travel_mode
+              ) === "TRANSIT"
+            ) {
+              // console.log("I made it this far");
+              infoArray.push(
+                props.distance.selectedRouteArray[i].legs[j].distance.text
+              );
+              infoArray.push(
+                props.distance.selectedRouteArray[i].legs[j].steps[k]
+                  .instructions
+              );
+              infoArray.push(
+                props.distance.selectedRouteArray[i].legs[j].steps[k].transit
+                  .headsign
+              );
+              infoArray.push(
+                String(
+                  props.distance.selectedRouteArray[i].legs[j].steps[k].transit
+                    .num_stops
+                ) + " stops"
+              );
+            }
+          }
+        }
+      }
+    }
+  }
+  // console.log(infoArray);
   // The Effect Hook used to perform side effects in this component.
   // https://reactjs.org/docs/hooks-effect.html.
   React.useEffect(
@@ -19,13 +70,15 @@ export default function ModelApi(props) {
         String(props.routeSelect) === "" ||
         props.directionSelect === undefined
       ) {
-        // console.log("ModelApi undefined ONE has been triggered");
         // initial render should be nothing.
+        // console.log("ModelApi - model_result (a) has been triggered");
+        // setModelResponse({
+        //   model_response: "",
+        // });
         return undefined;
       } else {
-        // console.log("ModelApi has been fucking triggered");
         console.log(
-          "And here is what ModelSelect/model_result has been triggered with: 1 routeSelect: ",
+          "ModelApi - model_result (c) has been triggered with: 1 routeSelect: ",
           props.routeSelect,
           "2: directionSelect",
           props.directionSelect
@@ -36,8 +89,9 @@ export default function ModelApi(props) {
               chosenRoute: props.routeSelect,
               chosenDirection: props.directionSelect,
               chosenTime: props.timeDayMonth[0],
-              chosenDay: props.timeDayMonth[1],
-              chosenMonth: props.timeDayMonth[2],
+              chosenMinute: props.timeDayMonth[1],
+              chosenDay: props.timeDayMonth[2],
+              chosenMonth: props.timeDayMonth[3],
             },
           })
           .then((res) => {
@@ -45,19 +99,20 @@ export default function ModelApi(props) {
             setModelResponse(modelResponse);
 
             console.log(
-              "setModelResponse has been triggered with the following values: ",
-              props.routeSelect,
-              props.directionSelect,
-              props.timeDayMonth[0],
-              props.timeDayMonth[1],
-              props.timeDayMonth[2]
+              "setModelResponse has been triggered with the following values - route:" +
+                props.routeSelect,
+              "direction:" + props.directionSelect,
+              "hour:" + props.timeDayMonth[0],
+              "minute:" + props.timeDayMonth[1],
+              "day:" + props.timeDayMonth[2],
+              "month" + props.timeDayMonth[3]
             );
           });
       }
     },
     // Listening for changes to props in order to
     // trigger a call to the API  to re-render the component.
-    [props.routeSelect, props.directionSelect]
+    [props.routeSelect, props.directionSelect, props.timeDayMonth]
   );
 
   React.useEffect(
@@ -66,16 +121,16 @@ export default function ModelApi(props) {
       if (
         props.directionSelect === undefined ||
         String(modelResponse.model_response) === "" ||
-        props.destinationNumber === 0
+        props.destinationNumber === 0 ||
+        props.originNumber === 0
       ) {
+        // console.log("ModelApi - percentile_result (a) has been triggered");
         // initial render should be nothing.
-        return undefined;
-      } else if (props.routeSelect !== "46A") {
-        console.log(
-          "ModelApi (percentile result) undefined TWO has been triggered"
-        );
         setMessage({
-          message: "No model for route this route yet.",
+          message: "",
+          distance: "",
+          instructions: "",
+          num_stops: "",
         });
       } else {
         console.log(
@@ -90,8 +145,8 @@ export default function ModelApi(props) {
               chosenRoute: props.routeSelect,
               chosenDirection: props.directionSelect,
               chosenTime: props.timeDayMonth[0],
-              chosenDay: props.timeDayMonth[1],
-              // chosenMonth: props.timeDayMonth[2],
+              chosenDay: props.timeDayMonth[2],
+              chosenMonth: props.timeDayMonth[3],
               origin: props.originNumber,
               destination: props.destinationNumber,
               modelResponse: modelResponse.model_response,
@@ -111,12 +166,24 @@ export default function ModelApi(props) {
                   percentileResponse.percentile_response +
                   " minute.",
               });
+            } else if (
+              typeof percentileResponse.percentile_response === "string"
+            ) {
+              setMessage({
+                message: String(percentileResponse.percentile_response),
+                distance: infoArray[0],
+                instructions: infoArray[1],
+                num_stops: infoArray[3],
+              });
             } else {
               setMessage({
                 message:
                   "This journey is estimated to take " +
                   percentileResponse.percentile_response +
                   " minutes.",
+                distance: infoArray[0],
+                instructions: infoArray[1],
+                num_stops: infoArray[3],
               });
             }
 
@@ -134,14 +201,24 @@ export default function ModelApi(props) {
     // Listening for changes to props in order to
     // trigger a call to the API  to re-render the component.
     // eslint-disable-next-line
-    [props, modelResponse.model_response, props.routeSelect]
+    [
+      props,
+      modelResponse.model_response,
+      props.routeSelect,
+      props.originNumber,
+      props.destinationNumber,
+      props.distance,
+    ]
     // // React Hook React.useEffect has a missing dependency: 'modelResponse.model_response'. Either include it or remove the dependency array.
     // TODO - Receiving the above error, find a fix - have disabled with eslint disable next line for now.
   );
 
   return (
-    <div>
-      <p>{message.message}</p>
-    </div>
+    <ListGroup variant="flush">
+      <ListGroup.Item>{message.message}</ListGroup.Item>
+      <ListGroup.Item>{message.instructions}</ListGroup.Item>
+      <ListGroup.Item>{message.distance}</ListGroup.Item>
+      <ListGroup.Item>{message.num_stops}</ListGroup.Item>
+    </ListGroup>
   );
 }

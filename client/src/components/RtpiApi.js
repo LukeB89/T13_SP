@@ -26,20 +26,35 @@ const RtpiApi = (props) => {
   // https://reactjs.org/docs/hooks-effect.html.
   React.useEffect(
     () => {
-      axios
-        .get(`/api/rtpi_api`, {
-          params: {
-            stopid: props.number,
-          },
-        })
-        .then((res) => {
-          const rawStopData = res.data;
-          setRawStopData(rawStopData);
-        });
+      const CancelToken = axios.CancelToken;
+      const source = CancelToken.source();
+      const loadData = () => {
+        try {
+          axios
+            .get(`/api/rtpi_api`, {
+              params: {
+                stopid: props.number,
+              },
+            })
+            .then((res) => {
+              setRawStopData(res.data);
+            });
+        } catch (error) {
+          if (axios.isCancel(error)) {
+            console.log("cancelled");
+          } else {
+            throw error;
+          }
+        }
+      };
+      loadData();
+      return () => {
+        source.cancel();
+      };
     },
-    // ?? - Maybe take away props.number and make this array empty.
-    [props.number]
-  );
+    // eslint-disable-next-line
+    []
+  ); // react-hooks/exhaustive-deps
 
   const stopData = rawStopData.results;
   const realInfo = stopData.map((info) => ({
