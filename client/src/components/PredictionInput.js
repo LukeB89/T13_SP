@@ -48,12 +48,13 @@ const PredictionInput = (props) => {
     if (getStops.length > 1) {
       return parseInt(x, 10);
     } else {
-      console.log();
       return getStops[1];
     }
   });
 
-  const routeDirectionStops = [];
+  // must not be an empty array. if it is an empty array, the page
+  // will crash when user tries to select a destination before choosing departure point.
+  const routeDirectionStops = ["Placeholder"];
 
   if (directionStopNumbers.length > 1) {
     for (var q = 0; q < props.parsedStops.length; q++) {
@@ -63,7 +64,7 @@ const PredictionInput = (props) => {
         }
       }
     }
-  } else {
+  } else if (directionStopNumbers.length === 1) {
     routeDirectionStops.push(getStops[1]);
   }
 
@@ -180,7 +181,7 @@ const PredictionInput = (props) => {
           <Typeahead
             // Inbuilt props: https://github.com/ericgio/react-bootstrap-typeahead/blob/master/docs/API.md#typeahead.
             id="basic-example"
-            options={routeDirectionStops}
+            options={routeDirectionStops.slice(1)}
             placeholder="Destination: e.g. Stop 2007, Stillorgan Road"
             ref={refUserDestination}
             onChange={(s) => {
