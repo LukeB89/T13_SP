@@ -3,18 +3,24 @@ import time
 import warnings
 import json
 import os.path
+
 import pandas as pd
 from configparser import ConfigParser
 from django.http import JsonResponse
 from .utils import get_prediction
-
-
+FILE = os.path.abspath(__file__)
+L2_DIR = os.path.dirname(FILE)
+L1_DIR = os.path.dirname(L2_DIR)
+ROOT_DIR = os.path.dirname(L1_DIR)
 warnings.filterwarnings('ignore')
-
-
+with open(ROOT_DIR + "/log.txt", 'w') as f:
+    f.write("FILE: {}\n".format(FILE))
+    f.write("L2: {}\n".format(L2_DIR))
+    f.write("L1: {}\n".format(L1_DIR))
+    f.write("Root Dir: {}\n".format(ROOT_DIR))
 # read DataBase info from the config file
 config = ConfigParser()
-config.read("../../config.ini")
+config.read(ROOT_DIR + "/config.ini")
 options = config["DataBase"]
 weather_api = options["weather_api"]
 
@@ -23,8 +29,12 @@ def rtpi_api(request):
     """Returns to the frontend the real time passenger information data for the requested stop.
 
     Receive via GET request the users chosen stop. """
+    with open(ROOT_DIR + "/log.txt",'a') as f:
+        f.write("RTPI Entry\n")
     real_time_array = []
     stop_id = request.GET.get('stopid')
+    with open(ROOT_DIR + "/log.txt",'a') as f:
+        f.write("Stop ID: {}\n".format(stop_id))
     url = "https://data.smartdublin.ie/cgi-bin/rtpi/realtimebusinformation?stopid=" + stop_id + "&operator=bac"
     r = requests.get(url)
     full_dict = r.json()
@@ -44,13 +54,13 @@ def route_stops(request):
     print("Django function route_stops, route here", route, type(stop))
     print("Django function route_stops, stop here", stop)
     # should there no file for the selected route.
-    if not os.path.isfile("./static/percentile_tables/route_" + route + "_dir_1_prcnt_data.csv") \
-            and not os.path.isfile("./static/percentile_tables/route_" + route + "_dir_2_prcnt_data.csv"):
+    if not os.path.isfile(L1_DIR + "/static/percentile_tables/route_" + route + "_dir_1_prcnt_data.csv") \
+            and not os.path.isfile(L1_DIR + "/static/percentile_tables/route_" + route + "_dir_2_prcnt_data.csv"):
         return JsonResponse({'route_stops_response': [1, "We're sorry, no data exists for this route."]})
     # should there only be a file for direction 1 of the selected route
-    elif not os.path.isfile("./static/percentile_tables/route_" + route + "_dir_2_prcnt_data.csv") \
-            and os.path.isfile("./static/percentile_tables/route_" + route + "_dir_1_prcnt_data.csv"):
-        df1 = pd.read_csv("./static/percentile_tables/route_" + route + "_dir_1_prcnt_data.csv"
+    elif not os.path.isfile(L1_DIR + "/static/percentile_tables/route_" + route + "_dir_2_prcnt_data.csv") \
+            and os.path.isfile(L1_DIR + "/static/percentile_tables/route_" + route + "_dir_1_prcnt_data.csv"):
+        df1 = pd.read_csv(L1_DIR + "/static/percentile_tables/route_" + route + "_dir_1_prcnt_data.csv"
                           , keep_default_na=True,
                           sep=',\s+', delimiter=',', skipinitialspace=True)
         # remove any columns with more than 80% missing data
@@ -59,9 +69,9 @@ def route_stops(request):
         requested_route_stops.insert(0, "1")
         return JsonResponse({'route_stops_response': requested_route_stops})
     # should there only be a file for direction 2 of the selected route
-    elif not os.path.isfile("./static/percentile_tables/route_" + route + "_dir_1_prcnt_data.csv") \
-            and os.path.isfile("./static/percentile_tables/route_" + route + "_dir_2_prcnt_data.csv"):
-        df2 = pd.read_csv("./static/percentile_tables/route_" + route + "_dir_2_prcnt_data.csv"
+    elif not os.path.isfile(L1_DIR + "/static/percentile_tables/route_" + route + "_dir_1_prcnt_data.csv") \
+            and os.path.isfile(L1_DIR + "/static/percentile_tables/route_" + route + "_dir_2_prcnt_data.csv"):
+        df2 = pd.read_csv(L1_DIR + "/static/percentile_tables/route_" + route + "_dir_2_prcnt_data.csv"
                           , keep_default_na=True,
                           sep=',\s+', delimiter=',', skipinitialspace=True)
         # remove any columns with more than 80% missing data
@@ -71,11 +81,11 @@ def route_stops(request):
         return JsonResponse({'route_stops_response': requested_route_stops})
     # where both files exist
     else:
-        df1 = pd.read_csv("./static/percentile_tables/route_" + route + "_dir_1_prcnt_data.csv"
+        df1 = pd.read_csv(L1_DIR + "/static/percentile_tables/route_" + route + "_dir_1_prcnt_data.csv"
                           , keep_default_na=True,
                           sep=',\s+', delimiter=',', skipinitialspace=True)
         df1 = df1[df1.columns[df1.isnull().mean() < 0.8]]
-        df2 = pd.read_csv("./static/percentile_tables/route_" + route + "_dir_2_prcnt_data.csv"
+        df2 = pd.read_csv(L1_DIR + "/static/percentile_tables/route_" + route + "_dir_2_prcnt_data.csv"
                           , keep_default_na=True,
                           sep=',\s+', delimiter=',', skipinitialspace=True)
         df2 = df2[df2.columns[df2.isnull().mean() < 0.8]]
@@ -157,7 +167,7 @@ def percentile_result(request):
     direction = request.GET.get('chosenDirection')
     print("Django function percentile_result, route here", route)
     print("Django function percentile_result, direction here", direction)
-    df = pd.read_csv("./static/percentile_tables/route_" + route + "_dir_" + direction + "_prcnt_data.csv",
+    df = pd.read_csv(L1_DIR + "/static/percentile_tables/route_" + route + "_dir_" + direction + "_prcnt_data.csv",
                      keep_default_na=True, sep=',\s+', delimiter=',', skipinitialspace=True)
     hour = int(request.GET.get('chosenTime'))
     day_string = request.GET.get('chosenDay')
