@@ -7,6 +7,7 @@ import pickle
 # Import individual sklearn modules used in model building and analysis
 from sklearn.ensemble import RandomForestRegressor
 
+
 def get_prediction(route, **kwargs):
     """ A Function to obtain the predicted arrival time based on specfic inputs
 
@@ -66,7 +67,5 @@ def get_prediction(route, **kwargs):
         print(randforest_model_predict[0])
 
 
-
-
 if __name__ == '__main__':
-    get_prediction("46A", TEMP=4.18, FEELS_LIKE=-2.82,TEMP_MIN=3.94, TEMP_MAX=6.07, PRESSURE=1008, HUMIDITY=75, WIND_SPEED=7.2, WIND_DEG=260, CLOUDS_ALL=40, STOPPOINTID=807, HOUR=23, WEATHER_MAIN="CLOUDS",WEATHER_ID=802)
+    get_prediction("46A", TEMP=4.18, FEELS_LIKE=-2.82, TEMP_MIN=3.94, TEMP_MAX=6.07, PRESSURE=1008, HUMIDITY=75, WIND_SPEED=7.2, WIND_DEG=260, CLOUDS_ALL=40, STOPPOINTID=807, HOUR=23, WEATHER_MAIN="CLOUDS", WEATHER_ID=802)

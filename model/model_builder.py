@@ -11,10 +11,12 @@ import sys
 # Used in splitting the data
 from sklearn.model_selection import train_test_split
 
+
 def get_routes():
     # Get a list of all routes and return to user
     route_df = pd.read_csv("../database_code/routes_tripids.csv")
     return route_df["Routes"]
+
 
 def clean_and_split(route):
     # Check if file is valid, log and return if not
@@ -140,7 +142,7 @@ def main():
                     fetr_df.to_csv("model_features.csv", index=False)
                 except Exception as e:
                     try:
-                        for i in range(1,9):
+                        for i in range(1, 9):
                             try:
                                 with open('model_log.txt', 'a') as f:
                                     f.write("Trying for Larger Route Model Building: {}% Less\n".format(i*10))
