@@ -47,6 +47,7 @@ def clean_and_split(route):
     # Return Variables
     return train_fetr, train_trgt
 
+
 def clean_and_split_large(route, percent):
     # Check if file is valid, log and return if not
     if not os.path.isfile("../database_code/larger/route_{}_leavetimes.csv".format(route)):
