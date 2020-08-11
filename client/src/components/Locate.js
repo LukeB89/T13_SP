@@ -23,10 +23,10 @@ function Locate({
           // Hard coding Dublin for the time being.
           (position) => {
             panToGeoMarker({
-              // lat: position.coords.latitude,
-              // lng: position.coords.longitude,
-              lat: dublinCenter.lat,
-              lng: dublinCenter.lng,
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+              //lat: dublinCenter.lat,
+              //lng: dublinCenter.lng,
             });
             setResponse(null);
           },
