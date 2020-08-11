@@ -48,20 +48,21 @@ def clean_and_split(route):
     # train_trgt = train_data["ACTUAL_TRIP_DURATION"]
     test_trgt = test_data["ACTUAL_TRIP_DURATION"]
 
+    # Get Train and test Planned time (used for metrics)
+    # train_plan = train_data["PLANNED_TRIP_DURATION"]
+    test_plan = test_data["PLANNED_TRIP_DURATION"]
+
     # Save feature data
     # train_fetr = train_data.drop(columns=["STOPPOINTID", "ACTUALTIME_ARR", "TRIPID", "PROGRNUMBER", "PLANNEDTIME_ARR", "VEHICLEID", "PLANNEDTIME_DEP", "ACTUALTIME_DEP", "DELAY", "TIMEATSTOP", "LINEID", "PLANNED_TRIP_DURATION", "ACTUAL_TRIP_DURATION", "YEAR", "DAY"])
     test_fetr = test_data.drop(columns=["STOPPOINTID", "ACTUALTIME_ARR", "TRIPID", "PROGRNUMBER", "PLANNEDTIME_ARR", "VEHICLEID", "PLANNEDTIME_DEP", "ACTUALTIME_DEP", "DELAY", "TIMEATSTOP", "LINEID", "PLANNED_TRIP_DURATION", "ACTUAL_TRIP_DURATION", "YEAR", "DAY"])
 
-    # Get Train and test Planned time (used for metrics)
-    # train_plan = train_data["PLANNED_TRIP_DURATION"]
-    test_plan = test_data["PLANNED_TRIP_DURATION"]
 
     # Clean up memory space
     # del leave_df, train_data, test_data
     del leave_df, test_data
     # Return Variables
     # return train_fetr, train_trgt, train_plan, test_fetr, test_trgt, test_plan
-    return test_fetr, test_trgt, test_fetr
+    return test_fetr, test_trgt, test_plan
 
 
 def clean_and_split_large(route, percent):
@@ -109,13 +110,14 @@ def clean_and_split_large(route, percent):
     # train_trgt = train_data["ACTUAL_TRIP_DURATION"]
     test_trgt = test_data["ACTUAL_TRIP_DURATION"]
 
+    # Get Train and test Planned time (used for metrics)
+    # train_plan = train_data["PLANNED_TRIP_DURATION"]
+    test_plan = test_data["PLANNED_TRIP_DURATION"]
+
     # Save feature data
     # train_fetr = train_data.drop(columns=["STOPPOINTID", "ACTUALTIME_ARR", "TRIPID","PROGRNUMBER", "PLANNEDTIME_ARR", "VEHICLEID", "PLANNEDTIME_DEP", "ACTUALTIME_DEP", "DELAY", "TIMEATSTOP", "LINEID", "PLANNED_TRIP_DURATION", "ACTUAL_TRIP_DURATION", "YEAR", "DAY"])
     test_fetr = test_data.drop(columns=["STOPPOINTID", "ACTUALTIME_ARR", "TRIPID", "PROGRNUMBER", "PLANNEDTIME_ARR", "VEHICLEID", "PLANNEDTIME_DEP", "ACTUALTIME_DEP", "DELAY", "TIMEATSTOP", "LINEID", "PLANNED_TRIP_DURATION", "ACTUAL_TRIP_DURATION", "YEAR", "DAY"])
 
-    # Get Train and test Planned time (used for metrics)
-    # train_plan = train_data["PLANNED_TRIP_DURATION"]
-    test_plan = test_data["PLANNED_TRIP_DURATION"]
 
     # Return Variables
     # return train_fetr, train_trgt, train_plan, test_trgt, test_fetr, test_plan
@@ -253,63 +255,63 @@ def metrics_builder(metrics_dict):
     return df
 
 
-def get_prediction(route, **kwargs):
-    """ A Function to obtain the predicted arrival time based on specfic inputs
-
-        This take sa route as a specific input and then the following keyword arguments.
-        Note defaults are in brackets:
-
-        TEMP (10.0)
-        FEELS_LIKE (10.0)
-        TEMP_MIN (10.0)
-        TEMP_MAX (10.0)
-        PRESSURE (1000)
-        HUMIDITY (70)
-        WIND_SPEED (10.0)
-        WIND_DEG (260)
-        CLOUDS_ALL (50)
-        DAYOFWEEK (0)
-        WEATHER_ID (0)
-        WEATHER_MAIN (0)
-        HOUR (0)
-        DIRECTION (1)
-        STOPPOINTID (0)
-        MONTH (1)
-        DAY (1)"""
-    if not os.path.isfile("model_test_log.txt".format(route)):
-        with open('model_test_log.txt', 'a') as f:
-            f.writelines("Log for Model Queries\n\n")
-        return
-    if not os.path.isfile("models/route_{}_RF_model.pkl".format(route)):
-        with open('model_test_log.txt', 'a') as f:
-            f.writelines("Route {} Has No Model\n".format(route))
-        return 90000
-    else:
-        fetr_df = pd.read_csv("model_features.csv")
-        columns = fetr_df.loc[fetr_df['Route'] == route, 'Features'].iloc[0].strip('[]\'').split("', '")
-        fetr_df = pd.DataFrame(columns=columns)
-        # Initialise Defaults
-        fetr_df.loc[0] = 0
-        fetr_df["TEMP"].loc[0] = 10.0
-        fetr_df["FEELS_LIKE"].loc[0] = 10.0
-        fetr_df["TEMP_MIN"].loc[0] = 10.0
-        fetr_df["TEMP_MAX"].loc[0] = 10.0
-        fetr_df["PRESSURE"].loc[0] = 1000
-        fetr_df["HUMIDITY"].loc[0] = 70
-        fetr_df["WIND_SPEED"].loc[0] = 10.0
-        fetr_df["WIND_DEG"].loc[0] = 260
-        fetr_df["CLOUDS_ALL"].loc[0] = 50
-        for key, value in kwargs.items():
-            if key in fetr_df.columns:
-                fetr_df[key].loc[0] = value
-            elif "{}_{}".format(key, value) in fetr_df.columns:
-                link = "{}_{}".format(key, value)
-                fetr_df[link].loc[0] = 1
-
-        with open('models/route_{}_RF_model.pkl'.format(route), 'rb') as handle:
-            rand_forest_model = pickle.load(handle)
-        randforest_model_predict = list(map(round, rand_forest_model.predict(fetr_df)))
-    return randforest_model_predict
+# def get_prediction(route, **kwargs):
+#     """ A Function to obtain the predicted arrival time based on specfic inputs
+#
+#         This take sa route as a specific input and then the following keyword arguments.
+#         Note defaults are in brackets:
+#
+#         TEMP (10.0)
+#         FEELS_LIKE (10.0)
+#         TEMP_MIN (10.0)
+#         TEMP_MAX (10.0)
+#         PRESSURE (1000)
+#         HUMIDITY (70)
+#         WIND_SPEED (10.0)
+#         WIND_DEG (260)
+#         CLOUDS_ALL (50)
+#         DAYOFWEEK (0)
+#         WEATHER_ID (0)
+#         WEATHER_MAIN (0)
+#         HOUR (0)
+#         DIRECTION (1)
+#         STOPPOINTID (0)
+#         MONTH (1)
+#         DAY (1)"""
+#     if not os.path.isfile("model_test_log.txt".format(route)):
+#         with open('model_test_log.txt', 'a') as f:
+#             f.writelines("Log for Model Queries\n\n")
+#         return
+#     if not os.path.isfile("models/route_{}_RF_model.pkl".format(route)):
+#         with open('model_test_log.txt', 'a') as f:
+#             f.writelines("Route {} Has No Model\n".format(route))
+#         return 90000
+#     else:
+#         fetr_df = pd.read_csv("model_features.csv")
+#         columns = fetr_df.loc[fetr_df['Route'] == route, 'Features'].iloc[0].strip('[]\'').split("', '")
+#         fetr_df = pd.DataFrame(columns=columns)
+#         # Initialise Defaults
+#         fetr_df.loc[0] = 0
+#         fetr_df["TEMP"].loc[0] = 10.0
+#         fetr_df["FEELS_LIKE"].loc[0] = 10.0
+#         fetr_df["TEMP_MIN"].loc[0] = 10.0
+#         fetr_df["TEMP_MAX"].loc[0] = 10.0
+#         fetr_df["PRESSURE"].loc[0] = 1000
+#         fetr_df["HUMIDITY"].loc[0] = 70
+#         fetr_df["WIND_SPEED"].loc[0] = 10.0
+#         fetr_df["WIND_DEG"].loc[0] = 260
+#         fetr_df["CLOUDS_ALL"].loc[0] = 50
+#         for key, value in kwargs.items():
+#             if key in fetr_df.columns:
+#                 fetr_df[key].loc[0] = value
+#             elif "{}_{}".format(key, value) in fetr_df.columns:
+#                 link = "{}_{}".format(key, value)
+#                 fetr_df[link].loc[0] = 1
+#
+#         with open('models/route_{}_RF_model.pkl'.format(route), 'rb') as handle:
+#             rand_forest_model = pickle.load(handle)
+#         randforest_model_predict = list(map(round, rand_forest_model.predict(fetr_df)))
+#     return randforest_model_predict
 
 
 def main():
@@ -321,32 +323,45 @@ def main():
         else:
             # If file dosnt exist create dataframe
             track_df = pd.DataFrame(columns=["Route", "Model"])
-        # Same as above but for a different file
-        if os.path.isfile("model_features.csv"):
-            fetr_df = pd.read_csv("model_features.csv")
-        else:
-            fetr_df = pd.DataFrame(columns=["Route", "Features"])
+
+        # We dont need to read in features to use them as we are cleaning the
+        # route and getting the feature values directly
+
+        # # Same as above but for a different file
+        # if os.path.isfile("model_features.csv"):
+        #     fetr_df = pd.read_csv("model_features.csv")
+        # else:
+        #     fetr_df = pd.DataFrame(columns=["Route", "Features"])
         # Open a log and write to it
         with open('model_test_log.txt', 'w') as f:
-            f.write("Starting Model Building\n\n")
+            f.write("Starting Model Testing\n\n")
         # Run function to get list of routes
         routes = get_routes()
+        route_trials = pd.DataFrame()
         # Go through each route
         for route in routes:
             # Check if current route has been tracked already, if not add to tracker
             if track_df[(track_df["Route"] == route)].empty:
                 track_df.loc[track_df.shape[0]] = [route, 0]
+
+            track_df.to_csv("model_tester_tracker.csv", index=False)
             # Check to see if current route has a model created
             if not track_df[(track_df["Route"] == route) & (track_df["Model"] == 0)].empty:
                 try:
                     with open('model_test_log.txt', 'a') as f:
-                        f.write("Building Model For Route {}\n".format(route))
+                        f.write("Testing Model For Route {}\n".format(route))
                     # Get feature and target data
                     # If route does not have file this will error and is caught below
-                    test_trgt, test_fetr, test_plan = clean_and_split(route)
-                    # Load pickle files
-                    randforest_model_predict = get_prediction(route)
-                    route_trials = pd.DataFrame()
+                    test_fetr, test_trgt, test_plan = clean_and_split(route)
+                    # check if model exists and pass on rest of code if not
+                    if not os.path.isfile("models/route_{}_RF_model.pkl".format(route)):
+                        with open('model_test_log.txt', 'a') as f:
+                            f.writelines("Route {} Has No Model\n".format(route))
+                            track_df.to_csv("model_tester_tracker.csv", index=False)
+                            continue
+                    with open('models/route_{}_RF_model.pkl'.format(route), 'rb') as handle:
+                        rand_forest_model = pickle.load(handle)
+                    randforest_model_predict = list(map(round, rand_forest_model.predict(test_fetr)))
                     # Build the metrics dictionary with test data and predictions
                     metrics_dict = test_model_outcome(randforest_model_predict, test_trgt, test_plan)
                     # Build the dataframe
@@ -355,27 +370,34 @@ def main():
                     randforrest_results.rename(columns={'Metrics': f'route={route}'}, inplace=True)
                     # Append dataframe to trials dataframe
                     route_trials = pd.concat([route_trials, randforrest_results], axis=1)
-                    route_trials.to_csv('metric_tester_results')
-                    # Output Features used to dataframe for use when building predictions
-                    if fetr_df[(fetr_df["Route"] == route)].empty:
-                        fetr_df.loc[fetr_df.shape[0]] = [route, list(test_fetr.columns)]
+                    route_trials.to_csv('metric_tester_results.csv')
+                    # Not keeping track of this here
+                    # # Output Features used to dataframe for use when building predictions
+                    # if fetr_df[(fetr_df["Route"] == route)].empty:
+                    #     fetr_df.loc[fetr_df.shape[0]] = [route, list(test_fetr.columns)]
                     # Update Tracker that model is complete
                     track_df.loc[track_df["Route"] == route, ["Model"]] = 1
                     # Update log
                     with open('model_test_log.txt', 'a') as f:
-                        f.write("Route {} Model Built\n".format(route))
+                        f.write("Route {} Model Tested\n".format(route))
                     track_df.to_csv("model_tester_tracker.csv", index=False)
-                    fetr_df.to_csv("model_features.csv", index=False)
+
                 except Exception as e:
                     try:
                         for i in range(1, 9):
                             try:
                                 with open('model_test_log.txt', 'a') as f:
                                     f.write("Trying for Larger Route Model Building: {}% Less\n".format(i * 10))
-                                    test_trgt, test_fetr, test_plan = clean_and_split_large(route, i / 10)
+                                    test_fetr, test_trgt, test_plan = clean_and_split_large(route, i / 10)
                                     # Load pickle files
-                                    randforest_model_predict = get_prediction(route)
-                                    route_trials = pd.DataFrame()
+                                    if not os.path.isfile("models/route_{}_RF_model.pkl".format(route)):
+                                        with open('model_test_log.txt', 'a') as f:
+                                            f.writelines("Route {} Has No Model\n".format(route))
+                                            track_df.to_csv("model_tester_tracker.csv", index=False)
+                                            continue
+                                    with open('models/route_{}_RF_model.pkl'.format(route), 'rb') as handle:
+                                        rand_forest_model = pickle.load(handle)
+                                    randforest_model_predict = list(map(round, rand_forest_model.predict(test_fetr)))
                                     # Build the metrics dictionary with test data and predictions
                                     metrics_dict = test_model_outcome(randforest_model_predict, test_trgt, test_plan)
                                     # Build the dataframe
@@ -384,17 +406,17 @@ def main():
                                     randforrest_results.rename(columns={'Metrics': f'route={route}'}, inplace=True)
                                     # Append dataframe to trials dataframe
                                     route_trials = pd.concat([route_trials, randforrest_results], axis=1)
-                                    route_trials.to_csv('metric_tester_results')
-                                    # Output Features used to dataframe for use when building predictions
-                                    if fetr_df[(fetr_df["Route"] == route)].empty:
-                                        fetr_df.loc[fetr_df.shape[0]] = [route, list(test_fetr.columns)]
+                                    route_trials.to_csv('metric_tester_results.csv')
+                                    ###### no longer needed
+                                    # # Output Features used to dataframe for use when building predictions
+                                    # if fetr_df[(fetr_df["Route"] == route)].empty:
+                                    #     fetr_df.loc[fetr_df.shape[0]] = [route, list(test_fetr.columns)]
                                     # Update Tracker that model is complete
                                     track_df.loc[track_df["Route"] == route, ["Model"]] = 1
                                     # Update log
                                     with open('model_test_log.txt', 'a') as f:
                                         f.write("Route {} Model Built\n".format(route))
                                     track_df.to_csv("model_tester_tracker.csv", index=False)
-                                    fetr_df.to_csv("model_features.csv", index=False)
                                     break
                             except Exception as e:
                                 with open('model_test_log.txt', 'a') as f:
