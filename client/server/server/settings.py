@@ -25,13 +25,17 @@ SECRET_KEY = 'm)0hmgci$2l_73x6r$nm=k&p1^m9dibs-v_)s-odl^bqz=t0)3'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'ipa-001.ucd.ie',
+    '137.43.49.17'
+]
 
 
 # Application definition
 
 INSTALLED_APPS = [
     'api.apps.ApiConfig',               # this line is the only alteration that has been made to this file
+    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -41,6 +45,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -114,8 +120,9 @@ USE_L10N = True
 
 USE_TZ = True
 
-
+CORS_ORIGIN_ALLOW_ALL = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = "/var/www/html/static/"

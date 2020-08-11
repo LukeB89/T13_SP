@@ -1,7 +1,7 @@
 {
   "name": "client",
   "version": "1.0.0",
-  "description": "",
+  "description": "Team 13 - Research Practicum",
   "main": "index.js",
   "dependencies": {
     "@reach/combobox": "^0.10.2",

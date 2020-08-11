@@ -6,7 +6,10 @@ import os
 import pickle
 # Import individual sklearn modules used in model building and analysis
 from sklearn.ensemble import RandomForestRegressor
-
+FILE = os.path.abspath(__file__)
+L2_DIR = os.path.dirname(FILE)
+L1_DIR = os.path.dirname(L2_DIR)
+ROOT_DIR = os.path.dirname(L1_DIR)
 
 def get_prediction(route, **kwargs):
     """ A Function to obtain the predicted arrival time based on specfic inputs
@@ -26,16 +29,16 @@ def get_prediction(route, **kwargs):
         WEATHER_MAIN = y
         DAYOFWEEK = y
         WEATHER_ID = y"""
-    if not os.path.isfile("./static/model_features/model_log.txt".format(route)):
-        with open('./static/model_features/model_log.txt', 'a') as f:
+    if not os.path.isfile(L1_DIR + "/static/model_features/model_log.txt".format(route)):
+        with open(L1_DIR + '/static/model_features/model_log.txt', 'a') as f:
             f.writelines("Log for Model Queries\n\n")
         return
-    if not os.path.isfile("./static/models/route_{}_RF_model.pkl".format(route)):
-        with open('./static/model_features/model_log.txt', 'a') as f:
+    if not os.path.isfile(L1_DIR + "/static/models/route_{}_RF_model.pkl".format(route)):
+        with open(L1_DIR + '/static/model_features/model_log.txt', 'a') as f:
             f.writelines("Route {} Has No Model\n".format(route))
         return 90000
     else:
-        fetr_df = pd.read_csv("./static/model_features/model_features.csv")
+        fetr_df = pd.read_csv(L1_DIR + "/static/model_features/model_features.csv")
         columns = fetr_df.loc[fetr_df['Route'] == route, 'Features'].iloc[0].strip('[]\'').split("', '")
         fetr_df = pd.DataFrame(columns=columns)
         # Initialise Defaults
@@ -56,7 +59,7 @@ def get_prediction(route, **kwargs):
                 link = "{}_{}".format(key, value)
                 fetr_df[link].loc[0] = 1
 
-        with open('./static/models/route_{}_RF_model.pkl'.format(route), 'rb') as handle:
+        with open(L1_DIR + '/static/models/route_{}_RF_model.pkl'.format(route), 'rb') as handle:
             rand_forest_model = pickle.load(handle)
         randforest_model_predict = list(map(round, rand_forest_model.predict(fetr_df)))
         return randforest_model_predict[0]
