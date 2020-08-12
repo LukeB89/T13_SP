@@ -34,6 +34,8 @@ def clean_and_split(route):
     leave_df["MINUTES"] = pd.to_datetime(leave_df["ACTUALTIME_ARR"], unit='s').dt.minute
     # Keep rows whose program number is 1
     leave_df.drop(leave_df[leave_df['PROGRNUMBER'] != 1].index, inplace=True)
+    # Remove rows whose values are less than 0
+    leave_df.drop(leave_df[leave_df['ACTUAL_TRIP_DURATION'] < 0].index, inplace=True)
     # Get Dummies for whole table on specfic coulmns
     test_data = pd.get_dummies(leave_df, columns=["DIRECTION", "MONTH", "HOUR", "MINUTES", "WEATHER_MAIN", "DAYOFWEEK", "WEATHER_ID"], drop_first=True)
     # Reset index
@@ -68,6 +70,8 @@ def clean_and_split_large(route, percent):
     leave_df["MINUTES"] = pd.to_datetime(leave_df["ACTUALTIME_ARR"], unit='s').dt.minute
     # Keep rows whose program number is 1
     leave_df.drop(leave_df[leave_df['PROGRNUMBER'] != 1].index, inplace=True)
+    # Remove rows whose values are less than 0
+    leave_df.drop(leave_df[leave_df['ACTUAL_TRIP_DURATION'] < 0].index, inplace=True)
     # Get list of all unique Trip IDs
     full_list = list(leave_df["TRIPID"].unique())
     # Split Trip Ids into 70:30 for Train:Test
