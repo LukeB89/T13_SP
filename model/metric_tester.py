@@ -86,7 +86,7 @@ def clean_and_split_large(route, percent):
     # Get list of all unique Trip IDs
     full_list = list(leave_df["TRIPID"].unique())
     # Split Trip Ids into 70:30 for Train:Test
-    tripid_train, tripid_test = train_test_split(full_list, test_size=percent, random_state=0)
+    tripid_train, tripid_test = train_test_split(full_list, test_size=percent, random_state=1)
     # Seperate out the data
     # ids_present = leave_df['TRIPID'].isin(tripid_train)
     # train_data = leave_df.loc[ids_present]
@@ -171,8 +171,8 @@ def test_model_outcome(predicted, actual, planned):
                 "actual_min_index": actual_min_index,
                 "predicted_max_index": predicted_max_index,
                 "predicted_min_index": predicted_min_index,
-                "delay_diff_max_index": predicted_max_index,
-                "delay_diff_min_index": predicted_min_index,
+                "delay_diff_max_index": delay_diff_max_index,
+                "delay_diff_min_index": delay_diff_min_index,
                 "MAE": MAE,
                 "R2": R2,
                 "MEDAE": MEDAE,
