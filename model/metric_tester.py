@@ -315,7 +315,7 @@ def main():
                                     track_df.loc[track_df["Route"] == route, ["Model"]] = 1
                                     # Update log
                                     with open('model_test_log.txt', 'a') as f:
-                                        f.write("Route {} Model Built\n".format(route))
+                                        f.write("Route {} Model Tested\n".format(route))
                                     track_df.to_csv("model_tester_tracker.csv", index=False)
                                     break
                             except Exception as e:
@@ -330,7 +330,7 @@ def main():
                         continue
             else:
                 with open('model_test_log.txt', 'a') as f:
-                    f.write("Route {} Model Already Built\n".format(route))
+                    f.write("Route {} Model Already Tested\n".format(route))
     except Exception as e:
         with open('model_test_log.txt', 'a') as f:
             f.write("Error: {}\n".format(e))
