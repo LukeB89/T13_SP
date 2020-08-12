@@ -32,36 +32,23 @@ def clean_and_split(route):
 
     # Create a feature "Minutes"
     leave_df["MINUTES"] = pd.to_datetime(leave_df["ACTUALTIME_ARR"], unit='s').dt.minute
-
     # Keep rows whose program number is 1
     leave_df.drop(leave_df[leave_df['PROGRNUMBER'] != 1].index, inplace=True)
-
     # Get Dummies for whole table on specfic coulmns
-    # train_data = pd.get_dummies(leave_df, columns=["DIRECTION", "MONTH", "HOUR", "MINUTES", "WEATHER_MAIN", "DAYOFWEEK", "WEATHER_ID"], drop_first=True)
     test_data = pd.get_dummies(leave_df, columns=["DIRECTION", "MONTH", "HOUR", "MINUTES", "WEATHER_MAIN", "DAYOFWEEK", "WEATHER_ID"], drop_first=True)
-
     # Reset index
-    # train_data.reset_index(drop=True, inplace=True)
     test_data.reset_index(drop=True, inplace=True)
-
     # Save target data
-    # train_trgt = train_data["ACTUAL_TRIP_DURATION"]
     test_trgt = test_data["ACTUAL_TRIP_DURATION"]
-
     # Get Train and test Planned time (used for metrics)
-    # train_plan = train_data["PLANNED_TRIP_DURATION"]
     test_plan = test_data["PLANNED_TRIP_DURATION"]
-
     # Save feature data
-    # train_fetr = train_data.drop(columns=["STOPPOINTID", "ACTUALTIME_ARR", "TRIPID", "PROGRNUMBER", "PLANNEDTIME_ARR", "VEHICLEID", "PLANNEDTIME_DEP", "ACTUALTIME_DEP", "DELAY", "TIMEATSTOP", "LINEID", "PLANNED_TRIP_DURATION", "ACTUAL_TRIP_DURATION", "YEAR", "DAY"])
     test_fetr = test_data.drop(columns=["STOPPOINTID", "ACTUALTIME_ARR", "TRIPID", "PROGRNUMBER", "PLANNEDTIME_ARR", "VEHICLEID", "PLANNEDTIME_DEP", "ACTUALTIME_DEP", "DELAY", "TIMEATSTOP", "LINEID", "PLANNED_TRIP_DURATION", "ACTUAL_TRIP_DURATION", "YEAR", "DAY"])
 
-
     # Clean up memory space
-    # del leave_df, train_data, test_data
     del leave_df, test_data
+
     # Return Variables
-    # return train_fetr, train_trgt, train_plan, test_fetr, test_trgt, test_plan
     return test_fetr, test_trgt, test_plan
 
 
@@ -79,23 +66,17 @@ def clean_and_split_large(route, percent):
 
     # Create a feature "Minutes"
     leave_df["MINUTES"] = pd.to_datetime(leave_df["ACTUALTIME_ARR"], unit='s').dt.minute
-
     # Keep rows whose program number is 1
     leave_df.drop(leave_df[leave_df['PROGRNUMBER'] != 1].index, inplace=True)
-
     # Get list of all unique Trip IDs
     full_list = list(leave_df["TRIPID"].unique())
     # Split Trip Ids into 70:30 for Train:Test
     tripid_train, tripid_test = train_test_split(full_list, test_size=percent, random_state=1)
     # Seperate out the data
-    # ids_present = leave_df['TRIPID'].isin(tripid_train)
-    # train_data = leave_df.loc[ids_present]
     ids_present = leave_df['TRIPID'].isin(tripid_test)
     test_data = leave_df.loc[ids_present]
     # Reset Index
-    # train_data.reset_index(drop=True, inplace=True)
     test_data.reset_index(drop=True, inplace=True)
-    # test_data = leave_df.loc[ids_present]
     # Clean up memory space
     del leave_df, full_list, tripid_test, tripid_train
     with open('model_test_log.txt', 'a') as f:
@@ -103,24 +84,15 @@ def clean_and_split_large(route, percent):
     if test_data.shape[0] > 1000000:
         return
     # Get Dummies for whole table on specfic coulmns
-    # train_data = pd.get_dummies(train_data, columns=["DIRECTION", "MONTH", "HOUR", "MINUTES", "WEATHER_MAIN", "DAYOFWEEK", "WEATHER_ID"], drop_first=True)
     test_data = pd.get_dummies(test_data, columns=["DIRECTION", "MONTH", "HOUR", "MINUTES", "WEATHER_MAIN", "DAYOFWEEK", "WEATHER_ID"], drop_first=True)
-
     # Save target data
-    # train_trgt = train_data["ACTUAL_TRIP_DURATION"]
     test_trgt = test_data["ACTUAL_TRIP_DURATION"]
-
     # Get Train and test Planned time (used for metrics)
-    # train_plan = train_data["PLANNED_TRIP_DURATION"]
     test_plan = test_data["PLANNED_TRIP_DURATION"]
-
     # Save feature data
-    # train_fetr = train_data.drop(columns=["STOPPOINTID", "ACTUALTIME_ARR", "TRIPID","PROGRNUMBER", "PLANNEDTIME_ARR", "VEHICLEID", "PLANNEDTIME_DEP", "ACTUALTIME_DEP", "DELAY", "TIMEATSTOP", "LINEID", "PLANNED_TRIP_DURATION", "ACTUAL_TRIP_DURATION", "YEAR", "DAY"])
     test_fetr = test_data.drop(columns=["STOPPOINTID", "ACTUALTIME_ARR", "TRIPID", "PROGRNUMBER", "PLANNEDTIME_ARR", "VEHICLEID", "PLANNEDTIME_DEP", "ACTUALTIME_DEP", "DELAY", "TIMEATSTOP", "LINEID", "PLANNED_TRIP_DURATION", "ACTUAL_TRIP_DURATION", "YEAR", "DAY"])
 
-
     # Return Variables
-    # return train_fetr, train_trgt, train_plan, test_trgt, test_fetr, test_plan
     return test_fetr, test_trgt, test_plan
 
 
@@ -255,65 +227,6 @@ def metrics_builder(metrics_dict):
     return df
 
 
-# def get_prediction(route, **kwargs):
-#     """ A Function to obtain the predicted arrival time based on specfic inputs
-#
-#         This take sa route as a specific input and then the following keyword arguments.
-#         Note defaults are in brackets:
-#
-#         TEMP (10.0)
-#         FEELS_LIKE (10.0)
-#         TEMP_MIN (10.0)
-#         TEMP_MAX (10.0)
-#         PRESSURE (1000)
-#         HUMIDITY (70)
-#         WIND_SPEED (10.0)
-#         WIND_DEG (260)
-#         CLOUDS_ALL (50)
-#         DAYOFWEEK (0)
-#         WEATHER_ID (0)
-#         WEATHER_MAIN (0)
-#         HOUR (0)
-#         DIRECTION (1)
-#         STOPPOINTID (0)
-#         MONTH (1)
-#         DAY (1)"""
-#     if not os.path.isfile("model_test_log.txt".format(route)):
-#         with open('model_test_log.txt', 'a') as f:
-#             f.writelines("Log for Model Queries\n\n")
-#         return
-#     if not os.path.isfile("models/route_{}_RF_model.pkl".format(route)):
-#         with open('model_test_log.txt', 'a') as f:
-#             f.writelines("Route {} Has No Model\n".format(route))
-#         return 90000
-#     else:
-#         fetr_df = pd.read_csv("model_features.csv")
-#         columns = fetr_df.loc[fetr_df['Route'] == route, 'Features'].iloc[0].strip('[]\'').split("', '")
-#         fetr_df = pd.DataFrame(columns=columns)
-#         # Initialise Defaults
-#         fetr_df.loc[0] = 0
-#         fetr_df["TEMP"].loc[0] = 10.0
-#         fetr_df["FEELS_LIKE"].loc[0] = 10.0
-#         fetr_df["TEMP_MIN"].loc[0] = 10.0
-#         fetr_df["TEMP_MAX"].loc[0] = 10.0
-#         fetr_df["PRESSURE"].loc[0] = 1000
-#         fetr_df["HUMIDITY"].loc[0] = 70
-#         fetr_df["WIND_SPEED"].loc[0] = 10.0
-#         fetr_df["WIND_DEG"].loc[0] = 260
-#         fetr_df["CLOUDS_ALL"].loc[0] = 50
-#         for key, value in kwargs.items():
-#             if key in fetr_df.columns:
-#                 fetr_df[key].loc[0] = value
-#             elif "{}_{}".format(key, value) in fetr_df.columns:
-#                 link = "{}_{}".format(key, value)
-#                 fetr_df[link].loc[0] = 1
-#
-#         with open('models/route_{}_RF_model.pkl'.format(route), 'rb') as handle:
-#             rand_forest_model = pickle.load(handle)
-#         randforest_model_predict = list(map(round, rand_forest_model.predict(fetr_df)))
-#     return randforest_model_predict
-
-
 def main():
     try:
         # Check if file exists
@@ -323,15 +236,6 @@ def main():
         else:
             # If file dosnt exist create dataframe
             track_df = pd.DataFrame(columns=["Route", "Model"])
-
-        # We dont need to read in features to use them as we are cleaning the
-        # route and getting the feature values directly
-
-        # # Same as above but for a different file
-        # if os.path.isfile("model_features.csv"):
-        #     fetr_df = pd.read_csv("model_features.csv")
-        # else:
-        #     fetr_df = pd.DataFrame(columns=["Route", "Features"])
         # Open a log and write to it
         with open('model_test_log.txt', 'w') as f:
             f.write("Starting Model Testing\n\n")
@@ -371,10 +275,6 @@ def main():
                     # Append dataframe to trials dataframe
                     route_trials = pd.concat([route_trials, randforrest_results], axis=1)
                     route_trials.to_csv('metric_tester_results.csv')
-                    # Not keeping track of this here
-                    # # Output Features used to dataframe for use when building predictions
-                    # if fetr_df[(fetr_df["Route"] == route)].empty:
-                    #     fetr_df.loc[fetr_df.shape[0]] = [route, list(test_fetr.columns)]
                     # Update Tracker that model is complete
                     track_df.loc[track_df["Route"] == route, ["Model"]] = 1
                     # Update log
@@ -407,10 +307,6 @@ def main():
                                     # Append dataframe to trials dataframe
                                     route_trials = pd.concat([route_trials, randforrest_results], axis=1)
                                     route_trials.to_csv('metric_tester_results.csv')
-                                    ###### no longer needed
-                                    # # Output Features used to dataframe for use when building predictions
-                                    # if fetr_df[(fetr_df["Route"] == route)].empty:
-                                    #     fetr_df.loc[fetr_df.shape[0]] = [route, list(test_fetr.columns)]
                                     # Update Tracker that model is complete
                                     track_df.loc[track_df["Route"] == route, ["Model"]] = 1
                                     # Update log
