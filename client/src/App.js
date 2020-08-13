@@ -30,7 +30,7 @@ const dublinCenter = require("./data/DublinCenter.json");
 // important for including and excluding certain place markers etc.
 const normalModeBasic = require("./data/NormalModeBasic");
 const mapContainerStyle = {
-  height: "93vh",
+  height: "92vh",
 };
 // Parsing the Stops data into various object shapes.
 const stops = require("./data/myStops");
@@ -350,7 +350,7 @@ export default function App() {
     );
 
   return (
-    <Container fluid>
+    <Container fluid style={{ paddingLeft: 0, paddingRight: 0 }}>
       <Row>
         <Col sm={12}>
           <CustomNavBar
@@ -373,7 +373,7 @@ export default function App() {
         </Col>
       </Row>
       <Row>
-        <Col lg={9} style={{ height: "93vh" }}>
+        <Col lg={9} style={{ height: "92vh" }}>
           {/* Render the Google Map */}
           <GoogleMap
             // Inbuilt props: https://react-google-maps-api-docs.netlify.app/#googlemap.
@@ -510,7 +510,7 @@ export default function App() {
         <Col
           lg={3}
           // CSS
-          style={{ paddingTop: "1vh", height: "93vh" }}
+          style={{ paddingTop: "1vh", paddingRight: "2vw", height: "92vh" }}
         >
           <PredictionInput
             // Passing in useState props - defined above.
