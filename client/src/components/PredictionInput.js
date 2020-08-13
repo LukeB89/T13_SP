@@ -221,6 +221,7 @@ const PredictionInput = (props) => {
                 props.destinationNumberChoice({ id: "0" });
                 props.setGeoMarkers([]);
                 props.setStopMarkers([]);
+                props.setSelectedTime(new Date());
                 props.refSelectedRoute.current.clear();
                 props.refUserOrigin.current.clear();
                 props.refUserDestination.current.clear();
