@@ -73,10 +73,12 @@ def clean_and_split_large(route, percent):
     leave_df.drop(leave_df[leave_df['ACTUAL_TRIP_DURATION'] < 0].index, inplace=True)
     # Get list of all unique Trip IDs
     full_list = list(leave_df["TRIPID"].unique())
-    # Split Trip Ids into 70:30 for Train:Test
+    # Split Trip Ids
     tripid_train, tripid_test = train_test_split(full_list, test_size=percent, random_state=0)
     # Seperate out the data
-    ids_present = leave_df['TRIPID'].isin(tripid_test)
+    ids_present = leave_df['TRIPID'].isin(tripid_train)
+    print(len(tripid_train))
+    print(len(tripid_test))
     test_data = leave_df.loc[ids_present]
     # Reset Index
     test_data.reset_index(drop=True, inplace=True)
