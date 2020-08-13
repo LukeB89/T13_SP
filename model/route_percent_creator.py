@@ -133,6 +133,7 @@ def main():
             # Check if current route has been tracked already, if not add to tracker
             if track_df[(track_df["Route"] == route)].empty:
                 track_df.loc[track_df.shape[0]] = [route, 0]
+            track_df.to_csv("prcnt_tracker.csv", index=False)
             if not track_df[(track_df["Route"] == route) & (track_df["Complete"] == 0)].empty:
                 # imports file to DataFrame
                 if os.path.isfile("../database_code/route_{}_leavetimes.csv".format(route)):
@@ -171,6 +172,7 @@ def main():
                     track_df.loc[track_df["Route"] == route, ["Complete"]] = 1
                     with open('prcnt_log.txt', 'a') as f:
                         f.write("Percent Table complete for Route {}\n\n".format(route))
+                track_df.to_csv("prcnt_tracker.csv", index=False)
             else:
                 with open('prcnt_log.txt', 'a') as f:
                     f.write("Route {} already exists\n".format(route))
