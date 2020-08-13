@@ -10,25 +10,14 @@ def get_routes():
 
 def clean_and_sep(df, direction):
     """ A function to clean and seperate out a route based on its direction"""
-    # Find the last stop in the route based on sequential PROGRNUMBER
-    max_dir = max(list(df[df["DIRECTION"] == direction]["PROGRNUMBER"].unique()))
     # Split into individual dataframes based on direction
     dir_df = df[df["DIRECTION"] == direction]
-    # Clean up memory
-    del df
     # Set subset columns to check for duplicates
     cols = ["TRIPID", "PROGRNUMBER", "STOPPOINTID", "PLANNEDTIME_ARR", "PLANNEDTIME_DEP", "ACTUALTIME_ARR",
             "ACTUALTIME_DEP", "VEHICLEID", "DELAY", "TIMEATSTOP", "LINEID", "DIRECTION",
             "PLANNED_TRIP_DURATION", "ACTUAL_TRIP_DURATION", "YEAR", "MONTH", "DAY", "HOUR", "DAYOFWEEK"]
     # drop duplicated entries
     dir_df.drop_duplicates(subset=cols, keep='last', inplace=True)
-
-    # Obtain trip ids that have the full route (based on last PROGRNUMBER)
-    dir_tripids = list(dir_df[(dir_df["PROGRNUMBER"] == max_dir)]["TRIPID"].unique())
-    # Seperate out the data
-    ids_present = dir_df['TRIPID'].isin(dir_tripids)
-    dir_df = dir_df.loc[ids_present]
-
     # Obtain trip ids that have a first stop( based on PROGRNUMBER = 1)
     dir_tripids = list(dir_df[(dir_df["PROGRNUMBER"] == 1)]["TRIPID"].unique())
     # Seperate out the data
