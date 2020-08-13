@@ -1,6 +1,9 @@
 # Config Files
 *.ini
 
+# Env Files
+*.env
+
 # PyCharm Related Files
 .idea/
 

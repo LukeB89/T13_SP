@@ -1,14 +1,18 @@
 // Importing outside developed components.
 import React from "react";
-import DateTimePicker from "react-datetime-picker";
+import DatePicker from "react-datepicker";
 import { Typeahead } from "react-bootstrap-typeahead";
+import Col from "react-bootstrap/Col";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
+import Card from "react-bootstrap/Card";
+import { setMinutes, setHours } from "date-fns";
+import { TwitterTimelineEmbed } from "react-twitter-embed";
 // Importing self-developed components.
 import ModelApi from "./ModelApi";
-import RouteStopsApi from "./RouteStopsApi";
 // Importing outside developed css.
 import ".././styles.css";
+import "react-datepicker/dist/react-datepicker.css";
 
 // Generating all of the GUI elements needed to provide the user with
 // journey time prediction. e.g. Date and Time select, Route select, etc.
@@ -16,57 +20,7 @@ const PredictionInput = (props) => {
   // Tracking this in state in order to enable a submit button to trigger the ModelApi response.
   const [destinationSelected, setDestinationSelected] = React.useState([]);
 
-  // Getting a list of stops and the direction from this api route.
-  // Takes the users chosen route and origin stop as input.
-  // console.log(
-  //   "originNumber going into RouteStipsApi from PredictionInput",
-  //   props.originNumber
-  // );
-  const getStops = RouteStopsApi(props.routeSelect, props.originNumber);
-  // console.log(
-  //   "getStops is here in PredictionInput where the direction indicator is being delivered",
-  //   getStops
-  // );
-
-  // // console.log("PredictionInput received routeSelect", props.routeSelect);
-  // For the Typeaheads containing bus route destination, user origin & user destination .
-  const refSelectedRoute = React.useRef();
-  const refUserOrigin = React.useRef();
-  const refUserDestination = React.useRef();
-
-  const directionIndicator = parseInt(getStops[0]);
-  // console.log("this is the direction indicator.", directionIndicator);
-
-  // getStops.splice(0, 1); // Removes the first element of getStops only if it is equal to 1 or 2.
-
-  // console.log("PredictionInput: getStops triggered after splice: ", getStops);
-
-  // Convert that array of strings to integers.
-  // A map method for Arrays, applying a function to all elements of an array.
-  // Skips the first element, this is direction indicator.
-  const directionStopNumbers = getStops.slice(1).map(function (x) {
-    if (getStops.length > 1) {
-      return parseInt(x, 10);
-    } else {
-      return getStops[1];
-    }
-  });
-
-  // must not be an empty array. if it is an empty array, the page
-  // will crash when user tries to select a destination before choosing departure point.
-  const routeDirectionStops = ["Placeholder"];
-
-  if (directionStopNumbers.length > 1) {
-    for (var q = 0; q < props.parsedStops.length; q++) {
-      for (var r = 0; r < directionStopNumbers.length; r++) {
-        if (directionStopNumbers[r] === parseInt(props.parsedStops[q].id)) {
-          routeDirectionStops.push(props.parsedStops[q].description);
-        }
-      }
-    }
-  } else if (directionStopNumbers.length === 1) {
-    routeDirectionStops.push(getStops[1]);
-  }
+  const directionIndicator = parseInt(props.getStops[0]);
 
   // for setting the date limits in date picker
   function addDays(date, days) {
@@ -79,139 +33,149 @@ const PredictionInput = (props) => {
   const newDate = addDays(date, 6);
 
   return (
-    <Form>
-      <Form.Group
-        // Inbuilt props: https://react-bootstrap.github.io/components/forms/#form-group-props.
-        controlId="formRoute"
-      >
-        <Typeahead
-          // Inbuilt props: https://github.com/ericgio/react-bootstrap-typeahead/blob/master/docs/API.md#typeahead.
-          id="basic-example"
-          options={props.allRoutes}
-          ref={refSelectedRoute}
-          placeholder="Select a route: e.g. 46A"
-          onChange={(route) => {
-            try {
-              for (var i = 0; i < props.allRoutes.length; i++) {
-                if (String(route) === props.allRoutes[i]) {
-                  props.setResponseValidator(false);
-                  const routeString = props.allRoutes[i];
-                  props.routeChoice({ routeString });
-                  props.setRouteSelect(routeString);
-                  props.setResponse(null);
-                  props.originNumberChoice({ id: "0" });
-                  props.destinationNumberChoice({ id: "0" });
-                  props.setOrigin("");
-                  props.setDestination("");
-                  refUserOrigin.current.clear();
-                  refUserDestination.current.clear();
-                }
-              }
-            } catch (error) {
-              console.log("😱 Error: ", error);
-            }
-          }}
-        />
-      </Form.Group>
-
-      <Form.Group
-        // Inbuilt props: https://react-bootstrap.github.io/components/forms/#form-group-props.
-        controlId="formTimeOfTravel"
-      >
-        <div style={{ textAlign: "center" }}>
-          <strong style={{ textAlign: "center" }}>
-            When are you travelling?
-          </strong>
-        </div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <DateTimePicker
-            // Inbuilt props: https://github.com/Hacker0x01/react-datepicker/blob/master/docs/index.md.
-            value={props.selectedTime}
-            onChange={(date) => props.timeChoice(date)}
-            minDate={date}
-            maxDate={newDate}
-          />
-        </div>
-
-        <Form.Group
-          // Inbuilt props: https://react-bootstrap.github.io/components/forms/#form-group-props.
-          controlId="formDeparture"
-          // CSS
-          style={{ paddingTop: "2vh" }}
-        >
+    <div style={{ height: "inherit" }}>
+      <Form style={{ height: "50%", overflowY: "scroll" }}>
+        <Form.Group controlId="formGridRoute" className="centerText">
+          <Form.Label>Route</Form.Label>
           <Typeahead
             // Inbuilt props: https://github.com/ericgio/react-bootstrap-typeahead/blob/master/docs/API.md#typeahead.
-            id="basic-example"
-            options={props.filteredStops}
-            placeholder="Departing from: e.g. Stop 334, D'Olier Street"
-            ref={refUserOrigin}
-            onChange={(address) => {
+            id="routes"
+            options={props.allRoutes}
+            ref={props.refSelectedRoute}
+            placeholder="Select a route: e.g. 46A"
+            onChange={(route) => {
               try {
-                for (var i = 0; i < props.parsedStops.length; i++) {
-                  if (String(address) === props.parsedStops[i].description) {
-                    const id = props.parsedStops[i].id;
-                    const lat = props.parsedStops[i].geometry.lat;
-                    const lng = props.parsedStops[i].geometry.lng;
-                    props.destinationNumberChoice({ id: "0" });
-                    refUserDestination.current.clear();
+                for (var i = 0; i < props.allRoutes.length; i++) {
+                  if (String(route) === props.allRoutes[i]) {
+                    const routeString = props.allRoutes[i];
+                    props.setStopMarkers([]);
                     props.setResponseValidator(false);
-                    props.originNumberChoice({ id });
-                    props.originChoice({ lat, lng });
-                    props.panTo({ lat, lng });
+                    props.setSubMarkerSelection(false);
+                    props.routeChoice({ routeString });
+                    props.setRouteSelect(routeString);
                     props.setResponse(null);
+                    props.originNumberChoice({ id: "0" });
+                    props.destinationNumberChoice({ id: "0" });
+                    props.setOrigin("");
+                    props.setDestination("");
+                    props.refUserOrigin.current.clear();
+                    props.refUserDestination.current.clear();
                   }
                 }
               } catch (error) {
-                console.log("😱 Error: ", error);
+                // console.log("😱 Error: ", error);
               }
             }}
           />
         </Form.Group>
 
-        <Form.Group
-          // Inbuilt props: https://react-bootstrap.github.io/components/forms/#form-group-props.
-          controlId="formArrival"
-        >
-          <Typeahead
-            // Inbuilt props: https://github.com/ericgio/react-bootstrap-typeahead/blob/master/docs/API.md#typeahead.
-            id="basic-example"
-            options={routeDirectionStops.slice(1)}
-            placeholder="Destination: e.g. Stop 2007, Stillorgan Road"
-            ref={refUserDestination}
-            onChange={(s) => {
-              try {
-                for (var i = 0; i < props.parsedStops.length; i++) {
-                  if (String(s) === props.parsedStops[i].description) {
-                    const lat = props.parsedStops[i].geometry.lat;
-                    const lng = props.parsedStops[i].geometry.lng;
-                    props.setResponseValidator(false);
-                    props.panTo({ lat, lng });
-                    props.setDirectionSelect(directionIndicator);
-                    props.setResponse(null);
-                    setDestinationSelected(s);
-                  }
-                }
-              } catch (error) {
-                console.log("😱 Error: ", error);
-              }
-            }}
-          />{" "}
+        <Form.Group controlId="formTime" className="centerText">
+          <Form.Label>
+            {" "}
+            <strong style={{ textAlign: "center" }}>
+              When are you travelling?
+            </strong>
+          </Form.Label>
+          <DatePicker
+            selected={props.selectedTime}
+            onChange={(date) => props.timeChoice(date)}
+            showTimeSelect
+            timeIntervals={15}
+            minDate={date}
+            minTime={setHours(setMinutes(date, 0), 6)}
+            maxTime={setHours(setMinutes(date, 45), 23)}
+            maxDate={newDate}
+            dateFormat="MMMM d, yyyy h:mm aa"
+            timeCaption="Hour"
+          />
+        </Form.Group>
+
+        <Form.Row>
           <Form.Group
-            // CSS
-            style={{ paddingTop: "1vh" }}
+            as={Col}
+            controlId="formGridDeparture"
+            className="centerText"
+          >
+            <Form.Label>Departure</Form.Label>
+            <Typeahead
+              // Inbuilt props: https://github.com/ericgio/react-bootstrap-typeahead/blob/master/docs/API.md#typeahead.
+              id="basic-example"
+              options={props.filteredStops}
+              placeholder="e.g. Stop 334, D'Olier Street"
+              ref={props.refUserOrigin}
+              // use selected for reading information from the click event,
+              // but how will this trigger the onChange function
+              onChange={(address) => {
+                try {
+                  for (var i = 0; i < props.parsedStops.length; i++) {
+                    if (String(address) === props.parsedStops[i].description) {
+                      const id = props.parsedStops[i].id;
+                      const lat = props.parsedStops[i].geometry.lat;
+                      const lng = props.parsedStops[i].geometry.lng;
+                      props.setStopMarkers([]);
+                      props.destinationNumberChoice({ id: "0" });
+                      props.refUserDestination.current.clear();
+                      props.setResponseValidator(false);
+                      props.originNumberChoice({ id });
+                      props.originChoice({ lat, lng });
+                      props.setDestination("");
+                      setDestinationSelected([]);
+                      props.panTo({ lat, lng });
+                      props.setResponse(null);
+                      props.setSubMarkerSelection(true);
+                    }
+                  }
+                } catch (error) {
+                  // console.log("😱 Error: ", error);
+                }
+              }}
+            />
+          </Form.Group>
+
+          <Form.Group
+            as={Col}
+            controlId="formGridArrival"
+            className="centerText"
+          >
+            <Form.Label>Arrival</Form.Label>
+            <Typeahead
+              // Inbuilt props: https://github.com/ericgio/react-bootstrap-typeahead/blob/master/docs/API.md#typeahead.
+              id="basic-example"
+              options={props.routeDirectionStops.slice(1)}
+              placeholder="e.g. Stop 2007, Stillorgan Road"
+              ref={props.refUserDestination}
+              onChange={(s) => {
+                try {
+                  for (var i = 0; i < props.parsedStops.length; i++) {
+                    if (String(s) === props.parsedStops[i].description) {
+                      const lat = props.parsedStops[i].geometry.lat;
+                      const lng = props.parsedStops[i].geometry.lng;
+                      props.setResponseValidator(false);
+                      props.panTo({ lat, lng });
+                      props.setDirectionSelect(directionIndicator);
+                      props.setResponse(null);
+                      setDestinationSelected(s);
+                    }
+                  }
+                } catch (error) {
+                  // console.log("😱 Error: ", error);
+                }
+              }}
+            />
+          </Form.Group>
+        </Form.Row>
+
+        <Form.Row>
+          <Form.Group
+            as={Col}
+            controlId="formGridSubmit"
+            className="predictButtons"
           >
             <Button
               // Inbuilt props: https://react-bootstrap.github.io/components/buttons/#button-props.
               style={{ width: "45%" }}
               onClick={() => {
                 try {
-                  // console.log("PredictionInput button triggered");
                   for (var i = 0; i < props.parsedStops.length; i++) {
                     if (
                       String(destinationSelected) ===
@@ -226,17 +190,25 @@ const PredictionInput = (props) => {
                     }
                   }
                 } catch (error) {
-                  console.log("😱 Error: ", error);
+                  // console.log("😱 Error: ", error);
                 }
               }}
             >
               Submit
-            </Button>{" "}
+            </Button>
+          </Form.Group>
+
+          <Form.Group
+            as={Col}
+            controlId="formGridClear"
+            className="predictButtons"
+          >
             <Button
               // Inbuilt props: https://react-bootstrap.github.io/components/buttons/#button-props.
               variant="secondary"
-              style={{ width: "45%", float: "right" }}
+              style={{ width: "45%" }}
               onClick={() => {
+                props.setSubMarkerSelection(false);
                 props.setResponseValidator(false);
                 props.setRouteSelect("");
                 props.setRouteString("");
@@ -249,26 +221,40 @@ const PredictionInput = (props) => {
                 props.destinationNumberChoice({ id: "0" });
                 props.setGeoMarkers([]);
                 props.setStopMarkers([]);
-                refSelectedRoute.current.clear();
-                refUserOrigin.current.clear();
-                refUserDestination.current.clear();
+                props.refSelectedRoute.current.clear();
+                props.refUserOrigin.current.clear();
+                props.refUserDestination.current.clear();
               }}
             >
               Clear
             </Button>
           </Form.Group>
-        </Form.Group>
-      </Form.Group>
-      <ModelApi
-        // Passing in props - Variables defined in App.js.
-        distance={props.distance}
-        originNumber={props.originNumber}
-        destinationNumber={props.destinationNumber}
-        timeDayMonth={props.timeDayMonth}
-        routeSelect={props.routeSelect}
-        directionSelect={props.directionSelect}
-      ></ModelApi>
-    </Form>
+        </Form.Row>
+        <ModelApi
+          // Passing in props - Variables defined in App.js.
+          distance={props.distance}
+          originNumber={props.originNumber}
+          destinationNumber={props.destinationNumber}
+          timeDayMonth={props.timeDayMonth}
+          routeSelect={props.routeSelect}
+          directionSelect={props.directionSelect}
+        ></ModelApi>
+      </Form>
+
+      <Card style={{ maxHeight: "48%", overflowY: "scroll" }}>
+        <Card.Body>
+          <Card.Title>Dublin Bus Twitter</Card.Title>
+
+          <TwitterTimelineEmbed
+            sourceType="profile"
+            screenName="dublinbusnews"
+            // autoHeight={true}
+            borderColor="#CDDC39"
+            options={{ height: "46vh" }}
+          />
+        </Card.Body>
+      </Card>
+    </div>
   );
 };
 

@@ -10,24 +10,17 @@ export default function RouteStopsApi(routeSelect, originNumber) {
   const [routeStopsResponse, setRouteStopsResponse] = useState({
     route_stops_response: [],
   });
-  // console.log("originNumber coming into RouteStopsApi", originNumber);
 
   // The Effect Hook used to perform side effects in this component.
   // https://reactjs.org/docs/hooks-effect.html.
   React.useEffect(
     () => {
       if (String(routeSelect) === "" || originNumber === 0) {
-        // console.log("RouteStopsApi - undefined - got rendered");
         // initial render should be nothing.
         return undefined;
       } else if (originNumber === isNaN) {
         return undefined;
       } else {
-        console.log(
-          "RouteStopsApi - got rendered with the following values: ",
-          routeSelect,
-          originNumber
-        );
         if (originNumber === 0) {
           setRouteStopsResponse({
             route_stops_response: [],
@@ -42,6 +35,7 @@ export default function RouteStopsApi(routeSelect, originNumber) {
           });
         } else {
           axios
+            // .get(`/route_stops`, {
             .get(`/api/route_stops`, {
               params: {
                 chosenRoute: routeSelect,
@@ -49,8 +43,6 @@ export default function RouteStopsApi(routeSelect, originNumber) {
               },
             })
             .then((res) => {
-              console.log("route select made it THIS FAR!", routeSelect);
-              // const routeStopsResponse = res.data;
               setRouteStopsResponse(res.data);
             });
         }

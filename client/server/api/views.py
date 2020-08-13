@@ -21,7 +21,7 @@ with open(ROOT_DIR + "/log.txt", 'w') as f:
 # read DataBase info from the config file
 config = ConfigParser()
 config.read(ROOT_DIR + "/config.ini")
-options = config["DataBase"]
+options = config["WeatherApi"]
 weather_api = options["weather_api"]
 
 
@@ -51,8 +51,7 @@ def route_stops(request):
     determines in which direction the user is going."""
     route = request.GET.get('chosenRoute')
     stop = request.GET.get('chosenStop')
-    print("Django function route_stops, route here", route, type(stop))
-    print("Django function route_stops, stop here", stop)
+
     # should there no file for the selected route.
     if not os.path.isfile(L1_DIR + "/static/percentile_tables/route_" + route + "_dir_1_prcnt_data.csv") \
             and not os.path.isfile(L1_DIR + "/static/percentile_tables/route_" + route + "_dir_2_prcnt_data.csv"):
@@ -119,12 +118,7 @@ def model_result(request, weather_api=weather_api):
     minute = int(request.GET.get('chosenMinute'))
     day = request.GET.get('chosenDay')
     month = request.GET.get('chosenMonth')
-    print("Django function model_result, route here", route)
-    print("Django function model_result, direction here", direction)
-    print("Django function model_result, hour here", hour)
-    print("Django function model_result, minute here", minute)
-    print("Django function model_result, day here", day)
-    print("Django function model_result, month here", month)
+
     DAYOFWEEK = time.strptime(day, "%a").tm_wday
     MONTH = time.strptime(month,'%b').tm_mon
     # Call to the weather api for the current weather conditions
@@ -154,7 +148,7 @@ def model_result(request, weather_api=weather_api):
                             CLOUDS_ALL=CLOUDS_ALL, MONTH=MONTH, MINUETS=minute, WEATHER_MAIN=WEATHER_MAIN,
                             DAYOFWEEK=DAYOFWEEK, WEATHER_ID=WEATHER_ID, DIRECTION=direction)
             result = int(result/60)
-            print(result)
+
             return JsonResponse({'model_response': result})
 
 
@@ -165,8 +159,7 @@ def percentile_result(request):
     and the response from the model for the total time of the selected route. """
     route = request.GET.get('chosenRoute')
     direction = request.GET.get('chosenDirection')
-    print("Django function percentile_result, route here", route)
-    print("Django function percentile_result, direction here", direction)
+
     df = pd.read_csv(L1_DIR + "/static/percentile_tables/route_" + route + "_dir_" + direction + "_prcnt_data.csv",
                      keep_default_na=True, sep=',\s+', delimiter=',', skipinitialspace=True)
     hour = int(request.GET.get('chosenTime'))
@@ -175,21 +168,15 @@ def percentile_result(request):
     origin = request.GET.get('origin')
     destination = request.GET.get('destination')
     model_response = int(request.GET.get('modelResponse'))
-    print("Django function percentile_result, hour here", hour, type(hour))
-    print("Django function percentile_result, day here", day_string, type(day_string))
-    print("Django function percentile_result, month here", month_string, type(month_string))
-    print("Django function percentile_result, origin here", origin, type(origin))
-    print("Django function percentile_result, destination here", destination, type(destination))
-    print("Django function percentile_result, model_response here", model_response, type(model_response))
+
     day = time.strptime(day_string, "%a").tm_wday
     month = time.strptime(month_string, '%b').tm_mon
     rowx = df[(df["HOUR"] == hour) & (df["DAYOFWEEK"] == day) & (df["MONTH"] == month)]
-    print("This is the dataframe", rowx)
     if rowx.empty:
-        print("Empty dataframe triggered")
+        # Empty dataframe triggered
         return JsonResponse({'percentile_response': "No modelling data for this journey exists."})
     elif pd.isna(rowx.iloc[0][destination]):
-        print("NaN values triggered")
+        # NaN values triggered
         return JsonResponse({'percentile_response': "No modelling data for this journey exists."})
     else:
         prct = int(rowx[destination]) - int(rowx[origin])

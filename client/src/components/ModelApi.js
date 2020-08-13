@@ -9,14 +9,13 @@ export default function ModelApi(props) {
   const [message, setMessage] = useState({
     message: "",
     distance: "",
-    instructions: "",
+    headsign: "",
     num_stops: "",
   });
   const [modelResponse, setModelResponse] = useState({ model_response: "" });
   // eslint-disable-next-line
   const [percentileResponse, setPercentileResponse] = useState();
-  // console.log("ModelApi - routeSelect here: ", props.routeSelect);
-  // console.log("Here is directionSelect in ModelApi", props.directionSelect);
+  // Extracting information from the Google Directions response object.
   const infoArray = [];
   if (props.distance !== null) {
     if (props.distance.selectedRouteArray[0] !== undefined) {
@@ -37,13 +36,12 @@ export default function ModelApi(props) {
                   .travel_mode
               ) === "TRANSIT"
             ) {
-              // console.log("I made it this far");
               infoArray.push(
                 props.distance.selectedRouteArray[i].legs[j].distance.text
               );
               infoArray.push(
-                props.distance.selectedRouteArray[i].legs[j].steps[k]
-                  .instructions
+                props.distance.selectedRouteArray[i].legs[j].steps[k].transit
+                  .line.short_name
               );
               infoArray.push(
                 props.distance.selectedRouteArray[i].legs[j].steps[k].transit
@@ -61,7 +59,7 @@ export default function ModelApi(props) {
       }
     }
   }
-  // console.log(infoArray);
+
   // The Effect Hook used to perform side effects in this component.
   // https://reactjs.org/docs/hooks-effect.html.
   React.useEffect(
@@ -71,19 +69,11 @@ export default function ModelApi(props) {
         props.directionSelect === undefined
       ) {
         // initial render should be nothing.
-        // console.log("ModelApi - model_result (a) has been triggered");
-        // setModelResponse({
-        //   model_response: "",
-        // });
+
         return undefined;
       } else {
-        console.log(
-          "ModelApi - model_result (c) has been triggered with: 1 routeSelect: ",
-          props.routeSelect,
-          "2: directionSelect",
-          props.directionSelect
-        );
         axios
+          // .get(`/model_result`, {
           .get(`/api/model_result`, {
             params: {
               chosenRoute: props.routeSelect,
@@ -97,16 +87,6 @@ export default function ModelApi(props) {
           .then((res) => {
             const modelResponse = res.data;
             setModelResponse(modelResponse);
-
-            console.log(
-              "setModelResponse has been triggered with the following values - route:" +
-                props.routeSelect,
-              "direction:" + props.directionSelect,
-              "hour:" + props.timeDayMonth[0],
-              "minute:" + props.timeDayMonth[1],
-              "day:" + props.timeDayMonth[2],
-              "month" + props.timeDayMonth[3]
-            );
           });
       }
     },
@@ -124,22 +104,16 @@ export default function ModelApi(props) {
         props.destinationNumber === 0 ||
         props.originNumber === 0
       ) {
-        // console.log("ModelApi - percentile_result (a) has been triggered");
         // initial render should be nothing.
         setMessage({
           message: "",
           distance: "",
-          instructions: "",
+          headsign: "",
           num_stops: "",
         });
       } else {
-        console.log(
-          "And here is what ModelApi/percentile_result triggered with: 1 directionSelect: ",
-          props.directionSelect,
-          "2: modelResponse.model_response",
-          modelResponse.model_response
-        );
         axios
+          // .get(`/percentile_result`, {
           .get(`/api/percentile_result`, {
             params: {
               chosenRoute: props.routeSelect,
@@ -155,46 +129,57 @@ export default function ModelApi(props) {
           .then((res) => {
             const percentileResponse = res.data;
             setPercentileResponse(percentileResponse);
-            if (parseInt(percentileResponse.percentile_response) < 0) {
-              setMessage({
-                message: "Please enter a correct combination of stops",
-              });
-            } else if (parseInt(percentileResponse.percentile_response) === 1) {
-              setMessage({
-                message:
-                  "This journey is estimated to take " +
-                  percentileResponse.percentile_response +
-                  " minute.",
-              });
-            } else if (
-              typeof percentileResponse.percentile_response === "string"
+            // In cases where there is no modelling data.
+            if (
+              typeof percentileResponse.percentile_response === "string" &&
+              props.distance !== null
             ) {
-              setMessage({
-                message: String(percentileResponse.percentile_response),
-                distance: infoArray[0],
-                instructions: infoArray[1],
-                num_stops: infoArray[3],
-              });
-            } else {
+              // Where no Google data exists to draw.
+              if (props.distance.selectedRouteArray.length === 0) {
+                setMessage({
+                  message:
+                    "😱 " + String(percentileResponse.percentile_response),
+                  distance: "",
+                  headsign: "",
+                  num_stops: "",
+                });
+              }
+              // Where Google data exists but not modelling data.
+              else if (props.distance.selectedRouteArray !== 0) {
+                setMessage({
+                  message:
+                    "😱 " + String(percentileResponse.percentile_response),
+                  distance:
+                    "The distance is approximately " + infoArray[0] + ",",
+                  headsign:
+                    "You can take the bus with the destination indicator " +
+                    String(infoArray[1]).toUpperCase() +
+                    " - " +
+                    infoArray[2] +
+                    ".",
+                  num_stops:
+                    "There will be " + infoArray[3] + " on this journey.",
+                });
+              }
+            }
+            // Normal case using a combination of modelling data and Google data for instructing user.
+            else {
               setMessage({
                 message:
-                  "This journey is estimated to take " +
-                  percentileResponse.percentile_response +
+                  "Your journey is estimated to take " +
+                  Math.abs(percentileResponse.percentile_response) +
                   " minutes.",
-                distance: infoArray[0],
-                instructions: infoArray[1],
-                num_stops: infoArray[3],
+                distance: "The distance is approximately " + infoArray[0] + ".",
+                headsign:
+                  "The destination indicator is " +
+                  String(infoArray[1]).toUpperCase() +
+                  " - " +
+                  infoArray[2] +
+                  ".",
+                num_stops:
+                  "There will be " + infoArray[3] + " on this journey.",
               });
             }
-
-            console.log(
-              "setPercentileResponse has been triggered with the following values: ",
-              props.timeDayMonth[0],
-              props.timeDayMonth[1],
-              props.originNumber,
-              props.destinationNumber,
-              modelResponse.model_response
-            );
           });
       }
     },
@@ -215,10 +200,12 @@ export default function ModelApi(props) {
 
   return (
     <ListGroup variant="flush">
-      <ListGroup.Item>{message.message}</ListGroup.Item>
-      <ListGroup.Item>{message.instructions}</ListGroup.Item>
-      <ListGroup.Item>{message.distance}</ListGroup.Item>
-      <ListGroup.Item>{message.num_stops}</ListGroup.Item>
+      <ListGroup.Item className="centerText">{message.message}</ListGroup.Item>
+      <ListGroup.Item className="centerText">{message.headsign}</ListGroup.Item>
+      <ListGroup.Item className="centerText">{message.distance}</ListGroup.Item>
+      <ListGroup.Item className="centerText">
+        {message.num_stops}
+      </ListGroup.Item>
     </ListGroup>
   );
 }

@@ -1,6 +1,6 @@
 import React from "react";
 
-const dublinCenter = require("../data/DublinCenter.json");
+// const dublinCenter = require("../data/DublinCenter.json");
 
 // A useful thing for this function would be to highlight all
 // of the stops that are within, say, 50m of the user.

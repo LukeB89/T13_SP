@@ -17,6 +17,7 @@ export default function StopSearch({
       <Typeahead
         // Inbuilt props: https://github.com/ericgio/react-bootstrap-typeahead/blob/master/docs/API.md#typeahead.
         id="basic-example"
+        className="mr-sm-2"
         options={stopDescriptions}
         maxVisible={2}
         placeholder="Choose a stop to locate on map..."

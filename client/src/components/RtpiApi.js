@@ -31,6 +31,7 @@ const RtpiApi = (props) => {
       const loadData = () => {
         try {
           axios
+            // .get(`/rtpi_api`, {
             .get(`/api/rtpi_api`, {
               params: {
                 stopid: props.number,
@@ -41,7 +42,6 @@ const RtpiApi = (props) => {
             });
         } catch (error) {
           if (axios.isCancel(error)) {
-            console.log("cancelled");
           } else {
             throw error;
           }

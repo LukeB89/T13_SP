@@ -39,22 +39,20 @@ const normalTouristOptions = {
 function CustomNavbar({
   // Receiving props - Custom built components.
   StopSearch,
-  // ?? This hasn't been received from App.js. Does it work?
-  setMarkerMap,
-  // Receiving props - Functions defined in App.js.
-  panTo,
-  stopChoice,
-  routeChoice,
-  // Receiving props - Stop data defined in App.js.
-  parsedStops,
-  stopDescriptions,
-  allRoutes,
-  // Receiving props - setTouristModeFlag defined in App.js
+  // Receiving useState props - defined in App.js.
   touristModeFlag,
   setTouristModeFlag,
   nightModeFlag,
   setNightModeFlag,
   setMapOptions,
+  // Receiving useCallback props - defined in App.js.
+  panTo,
+  //Receiving arrow function props - defined in App.js.
+  stopChoice,
+  // Receiving props - Stop data defined in App.js.
+  parsedStops,
+  stopDescriptions,
+  // Receiving props - CSS data defined in App.js.
   normalModeBasic,
 }) {
   const normalBasicOptions = {
@@ -65,63 +63,33 @@ function CustomNavbar({
     minZoom: 11,
   };
   return (
-    <Navbar
-      // Inbuilt props: https://react-bootstrap.github.io/components/navbar/#navbar-props
-      bg="dark"
-      variant="dark"
-      // CSS
-      style={{ maxHeight: "7vh", paddingBottom: "1vh" }}
-    >
-      <Navbar.Brand href="#home">
+    <Navbar bg="dark" variant="dark" expand="lg">
+      <Navbar.Brand href="">
         <img
-          alt=""
-          src="https://media.glassdoor.com/sqll/1043913/dublin-bus-squarelogo-1440748899751.png"
+          alt="dublin_bus.jpeg"
+          src="dublin_bus.jpeg"
           // CSS
           width="30"
           height="30"
           className="d-inline-block align-top"
+          // Reload the page when clicked.
+          onClick={() => window.location.reload(false)}
+          style={{ cursor: "pointer" }}
         />{" "}
-        Dublin Bus
+        Dublin Bus Journey Planner
       </Navbar.Brand>
       <Navbar.Toggle aria-controls="basic-navbar-nav" />
       <Navbar.Collapse id="basic-navbar-nav">
-        <Nav
-          // Inbuilt props: https://react-bootstrap.github.io/components/navs/#nav-props.
-          className="mr-auto"
-        ></Nav>
-
-        <Form
-          // CSS
-          style={{ paddingRight: "1vw" }}
-        >
-          <Form.Group
-            // Inbuilt props: https://react-bootstrap.github.io/components/forms/#form-group-props.
-            controlId="formRealTime"
-            // CSS
-            style={{ paddingTop: "1.6vh", width: "15vw" }}
-          >
-            <StopSearch
-              // Passing in props - Functions defined in App.js.
-              panTo={panTo}
-              stopChoice={stopChoice}
-              // ?? This hasn't been received from above. Does it work?
-              setMarkerMap={setMarkerMap}
-              // Passing in props - Stop data defined in App.js.
-              parsedStops={parsedStops}
-              stopDescriptions={stopDescriptions}
-            />
-          </Form.Group>
-        </Form>
-        <Form
-          // CSS
-          style={{ paddingRight: "1vw" }}
-        >
+        {/* For orienting toward the right */}
+        <Nav className="mr-auto"></Nav>
+        <Form inline>
           <Form.Check
             // Inbuilt props: https://react-bootstrap.github.io/components/forms/#form-check-props.
             type="switch"
             id="night-switch"
             label="Night Mode"
             // CSS
+            className="mr-sm-2"
             style={{ color: "white" }}
             onClick={() => {
               if (nightModeFlag === false && touristModeFlag === false) {
@@ -139,17 +107,13 @@ function CustomNavbar({
               }
             }}
           />
-        </Form>
-        <Form
-          // CSS
-          style={{ paddingRight: "1vw" }}
-        >
           <Form.Check
             // Inbuilt props: https://react-bootstrap.github.io/components/forms/#form-check-props.
             type="switch"
             id="tourist-switch"
             label="Tourist Mode"
             // CSS
+            className="mr-sm-2"
             style={{ color: "white" }}
             onClick={() => {
               if (touristModeFlag === false && nightModeFlag === false) {
@@ -167,16 +131,26 @@ function CustomNavbar({
               }
             }}
           />
+          <StopSearch
+            // Passing in useCallback props - defined in App.js.
+            panTo={panTo}
+            // Passing in arrow function props - defined in App.js.
+            stopChoice={stopChoice}
+            // Passing in props - Stop data defined in App.js.
+            parsedStops={parsedStops}
+            stopDescriptions={stopDescriptions}
+          />
+          <Weather
+            // Inbuilt props: https://github.com/lopogo59/simple-react-weather#readme.
+            unit="C"
+            city="Dublin, IE"
+            // ?? This API key will need to be hidden.
+            appid={process.env.REACT_APP_WEATHER_API}
+            // CSS
+            className="mr-sm-2"
+            style={{ paddingTop: "1.5vh" }}
+          />
         </Form>
-        <Weather
-          // Inbuilt props: https://github.com/lopogo59/simple-react-weather#readme.
-          unit="C"
-          city="Dublin, IE"
-          // ?? This API key will need to be hidden.
-          appid="0af2c4378e1bfb001a3e457cc32410be"
-          // CSS
-          style={{ paddingTop: "1.8vh" }}
-        />
       </Navbar.Collapse>
     </Navbar>
   );

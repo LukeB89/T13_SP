@@ -44,3 +44,13 @@
   top: 1rem;
   background: none;
 }
+
+.predictButtons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.centerText {
+  text-align: center;
+}
