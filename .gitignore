@@ -2,7 +2,7 @@
 *.ini
 
 # Env Files
-*.env
+.env
 
 # PyCharm Related Files
 .idea/
