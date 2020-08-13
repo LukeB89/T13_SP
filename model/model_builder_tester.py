@@ -12,6 +12,10 @@ import sys
 from sklearn.model_selection import train_test_split
 # Used to calculate evaluation metrics
 from sklearn import metrics
+# used in quieting warnings
+import warnings
+warnings.filterwarnings('ignore')
+
 
 def get_routes():
     # Get a list of all routes and return to user
@@ -36,21 +40,38 @@ def clean_and_split(route):
     # Remove rows whose values are less than 0
     leave_df.drop(leave_df[leave_df['ACTUAL_TRIP_DURATION'] < 0].index, inplace=True)
     # Get Dummies for whole table on specfic coulmns
-    test_data = pd.get_dummies(leave_df, columns=["DIRECTION", "MONTH", "HOUR", "MINUTES", "WEATHER_MAIN", "DAYOFWEEK", "WEATHER_ID"], drop_first=True)
-    # Reset index
+    leave_df = pd.get_dummies(leave_df, columns=["DIRECTION", "MONTH", "HOUR", "MINUTES", "WEATHER_MAIN", "DAYOFWEEK",
+                                                 "WEATHER_ID"], drop_first=True)
+    full_list = list(leave_df["TRIPID"].unique())
+    # Split Trip Ids
+    tripid_train, tripid_test = train_test_split(full_list, test_size=0.3, random_state=0)
+    # Seperate out the data
+    ids_present = leave_df['TRIPID'].isin(tripid_train)
+    train_data = leave_df.loc[ids_present]
+    ids_present = leave_df['TRIPID'].isin(tripid_train)
+    test_data = leave_df.loc[ids_present]
+    # Clean up memory space
+    del tripid_train, tripid_test, ids_present, leave_df
+    # Reset Index
+    train_data.reset_index(drop=True, inplace=True)
     test_data.reset_index(drop=True, inplace=True)
     # Save target data
+    train_trgt = train_data["ACTUAL_TRIP_DURATION"]
     test_trgt = test_data["ACTUAL_TRIP_DURATION"]
     # Get Train and test Planned time (used for metrics)
     test_plan = test_data["PLANNED_TRIP_DURATION"]
     # Save feature data
-    test_fetr = test_data.drop(columns=["STOPPOINTID", "ACTUALTIME_ARR", "TRIPID", "PROGRNUMBER", "PLANNEDTIME_ARR", "VEHICLEID", "PLANNEDTIME_DEP", "ACTUALTIME_DEP", "DELAY", "TIMEATSTOP", "LINEID", "PLANNED_TRIP_DURATION", "ACTUAL_TRIP_DURATION", "YEAR", "DAY"])
-
-    # Clean up memory space
-    del leave_df, test_data
+    train_fetr = train_data.drop(
+        columns=["STOPPOINTID", "ACTUALTIME_ARR", "TRIPID", "PROGRNUMBER", "PLANNEDTIME_ARR", "VEHICLEID",
+                 "PLANNEDTIME_DEP", "ACTUALTIME_DEP", "DELAY", "TIMEATSTOP", "LINEID", "PLANNED_TRIP_DURATION",
+                 "ACTUAL_TRIP_DURATION", "YEAR", "DAY"])
+    test_fetr = test_data.drop(
+        columns=["STOPPOINTID", "ACTUALTIME_ARR", "TRIPID", "PROGRNUMBER", "PLANNEDTIME_ARR", "VEHICLEID",
+                 "PLANNEDTIME_DEP", "ACTUALTIME_DEP", "DELAY", "TIMEATSTOP", "LINEID", "PLANNED_TRIP_DURATION",
+                 "ACTUAL_TRIP_DURATION", "YEAR", "DAY"])
 
     # Return Variables
-    return test_fetr, test_trgt, test_plan
+    return train_fetr, train_trgt, test_fetr, test_trgt, test_plan
 
 
 def clean_and_split_large(route, percent):
@@ -77,28 +98,49 @@ def clean_and_split_large(route, percent):
     tripid_train, tripid_test = train_test_split(full_list, test_size=percent, random_state=0)
     # Seperate out the data
     ids_present = leave_df['TRIPID'].isin(tripid_train)
-    print(len(tripid_train))
-    print(len(tripid_test))
-    test_data = leave_df.loc[ids_present]
+    leave_df = leave_df.loc[ids_present]
     # Reset Index
-    test_data.reset_index(drop=True, inplace=True)
+    leave_df.reset_index(drop=True, inplace=True)
     # Clean up memory space
-    del leave_df, full_list, tripid_test, tripid_train
+    del full_list, tripid_test, tripid_train
     with open('model_test_log.txt', 'a') as f:
-        f.writelines("After Split {} has the shape: {}\n".format(route, test_data.shape))
-    if test_data.shape[0] > 1000000:
+        f.writelines("After Split {} has the shape: {}\n".format(route, leave_df.shape))
+    if leave_df.shape[0] > 1000000:
         return
     # Get Dummies for whole table on specfic coulmns
-    test_data = pd.get_dummies(test_data, columns=["DIRECTION", "MONTH", "HOUR", "MINUTES", "WEATHER_MAIN", "DAYOFWEEK", "WEATHER_ID"], drop_first=True)
+    leave_df = pd.get_dummies(leave_df, columns=["DIRECTION", "MONTH", "HOUR", "MINUTES", "WEATHER_MAIN", "DAYOFWEEK",
+                                                 "WEATHER_ID"], drop_first=True)
+    # Get list of all unique Trip IDs
+    full_list = list(leave_df["TRIPID"].unique())
+    # Split Trip Ids
+    tripid_train, tripid_test = train_test_split(full_list, test_size=0.3, random_state=0)
+    # Seperate out the data
+    ids_present = leave_df['TRIPID'].isin(tripid_train)
+    train_data = leave_df.loc[ids_present]
+    ids_present = leave_df['TRIPID'].isin(tripid_train)
+    test_data = leave_df.loc[ids_present]
+    # Clean up memory space
+    del tripid_train, tripid_test, ids_present, leave_df
+    # Reset Index
+    train_data.reset_index(drop=True, inplace=True)
+    test_data.reset_index(drop=True, inplace=True)
     # Save target data
+    train_trgt = train_data["ACTUAL_TRIP_DURATION"]
     test_trgt = test_data["ACTUAL_TRIP_DURATION"]
     # Get Train and test Planned time (used for metrics)
     test_plan = test_data["PLANNED_TRIP_DURATION"]
     # Save feature data
-    test_fetr = test_data.drop(columns=["STOPPOINTID", "ACTUALTIME_ARR", "TRIPID", "PROGRNUMBER", "PLANNEDTIME_ARR", "VEHICLEID", "PLANNEDTIME_DEP", "ACTUALTIME_DEP", "DELAY", "TIMEATSTOP", "LINEID", "PLANNED_TRIP_DURATION", "ACTUAL_TRIP_DURATION", "YEAR", "DAY"])
+    train_fetr = train_data.drop(
+        columns=["STOPPOINTID", "ACTUALTIME_ARR", "TRIPID", "PROGRNUMBER", "PLANNEDTIME_ARR", "VEHICLEID",
+                 "PLANNEDTIME_DEP", "ACTUALTIME_DEP", "DELAY", "TIMEATSTOP", "LINEID", "PLANNED_TRIP_DURATION",
+                 "ACTUAL_TRIP_DURATION", "YEAR", "DAY"])
+    test_fetr = test_data.drop(
+        columns=["STOPPOINTID", "ACTUALTIME_ARR", "TRIPID", "PROGRNUMBER", "PLANNEDTIME_ARR", "VEHICLEID",
+                 "PLANNEDTIME_DEP", "ACTUALTIME_DEP", "DELAY", "TIMEATSTOP", "LINEID", "PLANNED_TRIP_DURATION",
+                 "ACTUAL_TRIP_DURATION", "YEAR", "DAY"])
 
     # Return Variables
-    return test_fetr, test_trgt, test_plan
+    return train_fetr, train_trgt, test_fetr, test_trgt, test_plan
 
 def test_model_outcome(predicted, actual, planned):
     """ Sort and Obtain Metrics in Dictionary format
@@ -229,10 +271,10 @@ def main():
                         f.write("Building Model For Route {}\n".format(route))
                     # Get feature and target data
                     # If route does not have file this will error and is caught below
-                    test_fetr, test_trgt, test_plan = clean_and_split(route)
+                    train_fetr, train_trgt, test_fetr, test_trgt, test_plan = clean_and_split(route)
                     # Create model for current route
                     randforest_model = RandomForestRegressor(n_estimators=64, max_features='auto', max_depth=16,
-                                                             oob_score=True, random_state=1).fit(test_fetr, test_trgt)
+                                                             oob_score=True, random_state=1).fit(train_fetr, train_trgt)
                     # Save Model with current Route name
                     with open('models/route_{}_RF_model.pkl'.format(route), 'wb') as handle:
                         pickle.dump(randforest_model, handle, pickle.HIGHEST_PROTOCOL)
@@ -267,12 +309,11 @@ def main():
                             try:
                                 with open('model_log.txt', 'a') as f:
                                     f.write("Trying for Larger Route Model Building: {}% Less\n".format(i*10))
-                                    test_fetr, test_trgt, test_plan = clean_and_split_large(route, i/10)
+                                    train_fetr, train_trgt, test_fetr, test_trgt, test_plan = clean_and_split_large(route, i/10)
                                     # Create model for current route
                                     randforest_model = RandomForestRegressor(n_estimators=16, max_features='auto',
-                                                                             max_depth=18,
-                                                                             oob_score=True, random_state=1).fit(
-                                        test_fetr, test_trgt)
+                                                                             max_depth=18, oob_score=True,
+                                                                             random_state=1).fit(train_fetr, train_trgt)
                                     # Save Model with current Route name
                                     with open('models/route_{}_RF_model.pkl'.format(route), 'wb') as handle:
                                         pickle.dump(randforest_model, handle, pickle.HIGHEST_PROTOCOL)
