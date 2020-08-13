@@ -175,7 +175,7 @@ def percentile_result(request):
     if rowx.empty:
         # Empty dataframe triggered
         return JsonResponse({'percentile_response': "No modelling data for this journey exists."})
-    elif pd.isna(rowx.iloc[0][destination]):
+    elif pd.isna(rowx.iloc[0][destination]) or pd.isna(rowx.iloc[0][origin]):
         # NaN values triggered
         return JsonResponse({'percentile_response': "No modelling data for this journey exists."})
     else:
