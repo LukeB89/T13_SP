@@ -151,12 +151,14 @@ def main():
                     try:
                         full_list = list(leave_df["TRIPID"].unique())
                         # Split Trip Ids
-                        tripid_train, tripid_test = train_test_split(full_list, test_size=i / 10, random_state=0)
-                        # Seperate out the data
-                        ids_present = leave_df['TRIPID'].isin(tripid_train)
-                        leave_df = leave_df.loc[ids_present]
                         if leave_df.shape[0] > 1000000:
-                            continue
+                            tripid_train, tripid_test = train_test_split(full_list, test_size=i / 10, random_state=0)
+                            # Seperate out the data
+                            ids_present = leave_df['TRIPID'].isin(tripid_train)
+                            leave_df = leave_df.loc[ids_present]
+                            if leave_df.shape[0] > 1000000:
+                                continue
+
                         # Initialise Flag for checks
                         complete = [False, False]
                         # Sort the dataframe by TRIPID, PROGRNUMBER and DAY. The Reason for DAY being included is that
