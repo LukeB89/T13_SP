@@ -12,7 +12,14 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 
 import os
 from configparser import ConfigParser
+
+FILE = os.path.abspath(__file__)
+L2_DIR = os.path.dirname(FILE)
+L1_DIR = os.path.dirname(L2_DIR)
+ROOT_DIR = os.path.dirname(L1_DIR)
+
 config = ConfigParser()
+config.read(ROOT_DIR + "/config.ini")
 options = config["Django"]
 secret_key = options["secret_key"]
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
