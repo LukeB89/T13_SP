@@ -1,0 +1,44 @@
+{
+  "name": "client",
+  "version": "1.0.0",
+  "description": "Team 13 - Research Practicum",
+  "main": "index.js",
+  "dependencies": {
+    "@reach/combobox": "^0.10.2",
+    "@react-google-maps/api": "1.3.0",
+    "axios": "^0.19.2",
+    "bootstrap": "^4.5.0",
+    "react": "^16.13.0",
+    "react-bootstrap": "^1.1.0",
+    "react-bootstrap-typeahead": "^5.1.0",
+    "react-datepicker": "^3.1.3",
+    "react-dom": "^16.13.0",
+    "react-scripts": "^3.4.0",
+    "react-twitter-embed": "^3.0.3",
+    "simple-react-weather": "^1.0.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LukeB89/T13_SP"
+  },
+  "author": "",
+  "license": "ISC",
+  "proxy": "http://localhost:8000",
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

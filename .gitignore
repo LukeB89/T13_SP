@@ -1,9 +1,15 @@
 # Config Files
 *.ini
 
+# Env Files
+.env
+
 # PyCharm Related Files
 .idea/
 
+node_modules/
+**/__pycache__/*
+**/build/*
 # files with extentions to ignore
 *.txt
 *.csv

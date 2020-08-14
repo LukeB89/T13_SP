@@ -1,0 +1,66 @@
+{
+  "clear-day": {
+    "label": "clear-day",
+    "icon": "wi wi-forecast-io-clear-day"
+  },
+
+  "clear-night": {
+    "label": "clear-night",
+    "icon": "wi wi-forecast-io-clear-night"
+  },
+
+  "rain": {
+    "label": "rain",
+    "icon": "wi wi-forecast-io-rain"
+  },
+
+  "snow": {
+    "label": "snow",
+    "icon": "wi wi-forecast-io-snow"
+  },
+
+  "sleet": {
+    "label": "sleet",
+    "icon": "wi wi-forecast-io-sleet"
+  },
+
+  "wind": {
+    "label": " strong-wind",
+    "icon": "wi wi-forecast-io-wind"
+  },
+
+  "fog": {
+    "label": "fog",
+    "icon": "wi wi-forecast-io-fog"
+  },
+
+  "cloudy": {
+    "label": "cloudy",
+    "icon": "wi wi-forecast-io-cloudy"
+  },
+
+  "partly-cloudy-day": {
+    "label": "partly-cloudy-day",
+    "icon": "wi wi-forecast-io-partly-cloudy-day"
+  },
+
+  "partly-cloudy-night": {
+    "label": "partly-cloudy-night",
+    "icon": "wi wi-forecast-io-partly-cloudy-night"
+  },
+
+  "hail": {
+    "label": "hail",
+    "icon": "wi wi-forecast-io-hail"
+  },
+
+  "thunderstorm": {
+    "label": "thunderstorm",
+    "icon": "wi wi-forecast-io-thunderstorm"
+  },
+
+  "tornado": {
+    "label": "tornado",
+    "icon": "wi wi-forecast-io-tornado"
+  }
+}

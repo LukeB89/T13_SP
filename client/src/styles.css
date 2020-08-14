@@ -1,0 +1,56 @@
+.react-datepicker-wrapper,
+.react-datepicker__input-container,
+.react-datepicker__input-container input {
+  display: block;
+  width: 100%;
+}
+
+.locate {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  z-index: 10;
+}
+
+.locate img {
+  width: 30px;
+  cursor: pointer;
+}
+
+.search {
+  position: absolute;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 400px;
+  z-index: 10;
+}
+
+.searchLocations {
+  width: 100%;
+  z-index: 10;
+}
+
+.searchLocations input {
+  font-size: 1.1rem;
+  width: 100%;
+}
+
+.boxes {
+  position: absolute;
+  top: 1rem;
+  background: none;
+}
+
+.predictButtons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.centerText {
+  text-align: center;
+}

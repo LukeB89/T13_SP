@@ -21,7 +21,7 @@ try:
 except (Exception, psycopg2.Error) as error:
     print("Error while connecting to PSQL: ", error)
 finally:
-    if (connection):
+    if connection:
         cursor.close()
         connection.close()
         print("PSQL Closed")
