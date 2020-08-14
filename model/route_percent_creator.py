@@ -147,90 +147,51 @@ def main():
                     continue
                 with open('prcnt_log.txt', 'a') as f:
                     f.write("Starting Route {}\n".format(route))
-
-                try:
-
-                    # Initialise Flag for checks
-                    complete = [False, False]
-                    # Sort the dataframe by TRIPID, PROGRNUMBER and DAY. The Reason for DAY being included is that
-                    # Sometimes there a multiple entried of the same TRIPID but on different days
-                    leave_df = leave_df.sort_values(by=["TRIPID", "PROGRNUMBER", "DAY"], ascending=[True, True, True])
-                    for num, direction in enumerate(list(leave_df["DIRECTION"].unique())):
-                        # Clean the data to obtain a complete route split data for each route
-                        dir_df= clean_and_sep(leave_df, direction)
-                        # Add the start time of each TRIPID journey, used in obtaining the duration into the route for the stop
-                        dir_df = add_trip_start(dir_df)
-
-                        # Add the duration into the route for each stop
-                        dir_df["STOP_TRIP_DURATION"] = dir_df["ACTUALTIME_ARR"] - dir_df["STARTTRIPTIME"]
-                        # Build percent data table
-                        dir_dict = build_dict(dir_df)
-                        with open('prcnt_log.txt', 'a') as f:
-                            f.write("Completed  Direction {}\n".format(direction))
-                        # Output the data to csv files
-                        complete[num] = csv_out(dir_dict, route, direction, list(dir_df["STOPPOINTID"].unique()))
-                    del leave_df
-                    if complete[0] or complete[1]:
-                        # Update Tracker that model is complete
-                        track_df.loc[track_df["Route"] == route, ["Complete"]] = 1
-                        with open('prcnt_log.txt', 'a') as f:
-                            f.write("Percent Table complete for Route {}\n\n".format(route))
-                    track_df.to_csv("prcnt_tracker.csv", index=False)
-
-                except:
+                for i in range(1, 9):
                     try:
-                        for i in range(1, 9):
-                            try:
-                                full_list = list(leave_df["TRIPID"].unique())
-                                # Split Trip Ids
-                                tripid_train, tripid_test = train_test_split(full_list, test_size=i/10, random_state=0)
-                                # Seperate out the data
-                                ids_present = leave_df['TRIPID'].isin(tripid_train)
-                                leave_df = leave_df.loc[ids_present]
-                                if leave_df.shape[0] > 1000000:
-                                    continue
-                                # Initialise Flag for checks
-                                complete = [False, False]
-                                # Sort the dataframe by TRIPID, PROGRNUMBER and DAY. The Reason for DAY being included is that
-                                # Sometimes there a multiple entried of the same TRIPID but on different days
-                                leave_df = leave_df.sort_values(by=["TRIPID", "PROGRNUMBER", "DAY"],
-                                                                ascending=[True, True, True])
-                                for num, direction in enumerate(list(leave_df["DIRECTION"].unique())):
-                                    # Clean the data to obtain a complete route split data for each route
-                                    dir_df = clean_and_sep(leave_df, direction)
-                                    # Add the start time of each TRIPID journey, used in obtaining the duration into the route for the stop
-                                    dir_df = add_trip_start(dir_df)
+                        full_list = list(leave_df["TRIPID"].unique())
+                        # Split Trip Ids
+                        tripid_train, tripid_test = train_test_split(full_list, test_size=i / 10, random_state=0)
+                        # Seperate out the data
+                        ids_present = leave_df['TRIPID'].isin(tripid_train)
+                        leave_df = leave_df.loc[ids_present]
+                        if leave_df.shape[0] > 1000000:
+                            continue
+                        # Initialise Flag for checks
+                        complete = [False, False]
+                        # Sort the dataframe by TRIPID, PROGRNUMBER and DAY. The Reason for DAY being included is that
+                        # Sometimes there a multiple entried of the same TRIPID but on different days
+                        leave_df = leave_df.sort_values(by=["TRIPID", "PROGRNUMBER", "DAY"],
+                                                        ascending=[True, True, True])
+                        for num, direction in enumerate(list(leave_df["DIRECTION"].unique())):
+                            # Clean the data to obtain a complete route split data for each route
+                            dir_df = clean_and_sep(leave_df, direction)
+                            # Add the start time of each TRIPID journey, used in obtaining the duration into the route for the stop
+                            dir_df = add_trip_start(dir_df)
 
-                                    # Add the duration into the route for each stop
-                                    dir_df["STOP_TRIP_DURATION"] = dir_df["ACTUALTIME_ARR"] - dir_df["STARTTRIPTIME"]
-                                    # Build percent data table
-                                    dir_dict = build_dict(dir_df)
-                                    with open('prcnt_log.txt', 'a') as f:
-                                        f.write("Completed  Direction {}\n".format(direction))
-                                    # Output the data to csv files
-                                    complete[num] = csv_out(dir_dict, route, direction,
-                                                            list(dir_df["STOPPOINTID"].unique()))
-                                del leave_df
-                                if complete[0] or complete[1]:
-                                    # Update Tracker that model is complete
-                                    track_df.loc[track_df["Route"] == route, ["Complete"]] = 1
-                                    with open('prcnt_log.txt', 'a') as f:
-                                        f.write("Percent Table complete for Route {} with {}% less data\n\n".format(route, i*10))
-                                track_df.to_csv("prcnt_tracker.csv", index=False)
-                                break
+                            # Add the duration into the route for each stop
+                            dir_df["STOP_TRIP_DURATION"] = dir_df["ACTUALTIME_ARR"] - dir_df["STARTTRIPTIME"]
+                            # Build percent data table
+                            dir_dict = build_dict(dir_df)
+                            with open('prcnt_log.txt', 'a') as f:
+                                f.write("Completed  Direction {}\n".format(direction))
+                            # Output the data to csv files
+                            complete[num] = csv_out(dir_dict, route, direction,
+                                                    list(dir_df["STOPPOINTID"].unique()))
+                        del leave_df
+                        if complete[0] or complete[1]:
+                            # Update Tracker that model is complete
+                            track_df.loc[track_df["Route"] == route, ["Complete"]] = 1
+                            with open('prcnt_log.txt', 'a') as f:
+                                f.write("Percent Table complete for Route {} with {}% less data\n\n".format(route, i * 10))
+                        track_df.to_csv("prcnt_tracker.csv", index=False)
+                        break
 
-                            except Exception as e:
-                                with open('prcnt_log.txt', 'a') as f:
-                                    f.write("Error: {} \n".format(e))
-                                # If Error move on to next percent
-                                continue
                     except Exception as e:
                         with open('prcnt_log.txt', 'a') as f:
                             f.write("Error: {} \n".format(e))
-                            exc_type, exc_value, exc_traceback = sys.exc_info()
-                            f.write(exc_type)
-                            f.write(exc_value)
-                            f.write(exc_traceback)
+                        # If Error move on to next percent
+                        continue
             else:
                 with open('prcnt_log.txt', 'a') as f:
                     f.write("Route {} already exists\n".format(route))
