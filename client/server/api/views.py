@@ -23,6 +23,8 @@ config = ConfigParser()
 config.read(ROOT_DIR + "/config.ini")
 options = config["WeatherApi"]
 weather_api = options["weather_api"]
+options_a = config["NTAApi"]
+nta_api = options_a["nta_api"]
 
 
 def rtpi_api(request):
@@ -35,8 +37,10 @@ def rtpi_api(request):
     stop_id = request.GET.get('stopid')
     with open(ROOT_DIR + "/log.txt",'a') as f:
         f.write("Stop ID: {}\n".format(stop_id))
-    url = "https://data.smartdublin.ie/cgi-bin/rtpi/realtimebusinformation?stopid=" + stop_id + "&operator=bac"
-    r = requests.get(url)
+    # url = "https://data.smartdublin.ie/cgi-bin/rtpi/realtimebusinformation?stopid=" + stop_id + "&operator=bac"
+    url = "https://api.nationaltransport.ie/rtpi/RealTimeBusInformation?stopid=" + stop_id + "&operator=bac"
+    headers = {'Ocp-Apim-Subscription-Key': nta_api}
+    r = requests.get(url, headers=headers)
     full_dict = r.json()
     results_dict = full_dict['results']
     real_time_array.append(results_dict)
